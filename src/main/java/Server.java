@@ -1,7 +1,4 @@
-import beans.LoginType;
-import beans.OnlineUsers;
-import beans.SearchType;
-import beans.SignupType;
+import beans.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,9 +52,23 @@ public class Server extends WebSocketServer {
             case "search":
                 search(s, webSocket);
                 break;
+            case "addProduct":
+                ProductType product = null;
+              //  int id = users.get(webSocket);
+                int id = 1;
+                try {
+                    product = objectMapper.readValue(s, ProductType.class);
+                    ProductWithId productWithId = new ProductWithId(product.payload, id);
+                    db.ProductHandler.addProduct(productWithId);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+
+                break;
             default:
                 throw new IllegalStateException("Unexpected value: " + type);
         }
+
     }
 
     @Override
@@ -77,7 +88,7 @@ public class Server extends WebSocketServer {
             System.out.println(user.payload.username + " " + user.payload.pw);
             if (ValidateUser.validate(user.payload.username, user.payload.pw)) {
                 webSocket.send("{\"type\":\"login\",\"payload\":{\"success\":true}}");
-                users.put(user.payload.username, webSocket);
+               // users.put(user.payload.username, webSocket);
             } else {
                 webSocket.send("{\"type\":\"login\",\"payload\":{\"success\":false}}");
             }
@@ -102,6 +113,7 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             SearchType search = objectMapper.readValue(s, SearchType.class);
+            searchHandler.search(search.payload);
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
