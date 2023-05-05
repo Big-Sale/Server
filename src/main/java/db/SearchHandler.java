@@ -46,7 +46,7 @@ public class SearchHandler {
 
     public static LinkedList<BuyProduct> getRandomProducts() {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from products where status = 'available' order by random() limit 5;";
+        String query = "select * from products where status = 'available' order by random() limit 100;";
         LinkedList<BuyProduct> products = new LinkedList<>();
         try {
             Statement stm = con.createStatement();
