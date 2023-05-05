@@ -1,8 +1,9 @@
 package db;
 
 import beans.SignupUser;
+import com.fasterxml.jackson.databind.JsonNode;
 
-public class SignupHandler {
+public class SignupHandler extends DBtask {
     private static boolean validateSignup(SignupUser user) {
         //validate username is unique
         return true;
@@ -16,4 +17,8 @@ public class SignupHandler {
         return false;
     }
 
+    @Override
+    public JsonNode doExecute(JsonNode node) {
+    return null;
+    }
 }

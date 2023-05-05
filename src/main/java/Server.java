@@ -5,6 +5,7 @@ import beans.SignupType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import db.LoginHandler;
 import db.SearchHandler;
 import db.ValidateUser;
 import org.java_websocket.WebSocket;
@@ -45,9 +46,10 @@ public class Server extends WebSocketServer {
             throw new RuntimeException(e);
         }
         String type = rootNode.get("type").asText();
+        J
         switch (type) {
             case "login":
-                login(s, webSocket);
+                new LoginHandler().execute(rootNode);
                 break;
             case "signup":
                 signup(s, webSocket);
