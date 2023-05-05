@@ -2,11 +2,7 @@ package db;
 
 import beans.SignupType;
 import beans.SignupUser;
-import beans.Type;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import marshall.MarshallHandler;
-
+import marshall.UnmarshallHandler;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,7 +34,7 @@ public class SignupHandler extends DBtask {
     public static boolean signup(SignupUser user) {
         if (validateSignup(user)) {
             Connection con = DataBaseConnection.getDatabaseConnection();
-            // TODO gör query
+            // TODO gör procedure
             return true;
         }
         return false;
@@ -46,7 +42,7 @@ public class SignupHandler extends DBtask {
 
     @Override
     public String doExecute(String s) {
-        SignupType type = MarshallHandler.unmarshall(s, SignupType.class);
+        SignupType type = UnmarshallHandler.unmarshall(s, SignupType.class);
         SignupUser user = type.payload;
         String success;
         if(signup(user)) {
