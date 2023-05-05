@@ -1,14 +1,13 @@
 package db;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 public abstract class DBtask {
 
-    public JsonNode execute(JsonNode node) {
+    public String execute(String s) {
         DBlogger.log("temp"); //TODO ändra
-        return doExecute(node);
+        return doExecute(s);
 
     }
 
-    public abstract JsonNode doExecute(JsonNode node);
+    public abstract String doExecute(String s);
+
 }

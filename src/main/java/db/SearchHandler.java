@@ -1,7 +1,6 @@
 package db;
 
 import beans.BuyProduct;
-import beans.Product;
 import beans.Search;
 
 import java.sql.Connection;
@@ -9,13 +8,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedList;
-import com.fasterxml.jackson.databind.JsonNode;
 
 public class SearchHandler extends DBtask {
 
 
     @Override
-    public JsonNode doExecute(JsonNode node) {
+    public String doExecute(String s) {
 
         /*unmarshal
                 prata med db

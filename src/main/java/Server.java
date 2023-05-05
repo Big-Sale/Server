@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import db.LoginHandler;
 import db.SearchHandler;
+import db.SignupHandler;
 import db.ValidateUser;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -57,10 +58,9 @@ public class Server extends WebSocketServer {
             throw new RuntimeException(e);
         }
         String type = rootNode.get("type").asText();
-        J
         switch (type) {
             case "login":
-                new LoginHandler().execute(rootNode);
+                String temp = new LoginHandler().execute(s); //TODO kom på nått smart
                 break;
             case "signup":
                 signup(s, webSocket);
@@ -114,17 +114,9 @@ public class Server extends WebSocketServer {
         }
     }
     private void signup(String s, WebSocket webSocket) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            SignupType signup = objectMapper.readValue(s, SignupType.class);
-            if (db.SignupHandler.signup(signup.payload)) {
-                webSocket.send("{\"type\":\"signup\",\"payload\":{\"success\":true}}");
-            } else {
-                webSocket.send("{\"type\":\"signup\",\"payload\":{\"success\":false}}");
-            }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        SignupHandler sh = new SignupHandler();
+        String toReturn = sh.execute(s);
+        webSocket.send(toReturn);
     }
     private void search(String s, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();

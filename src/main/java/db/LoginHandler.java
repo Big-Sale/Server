@@ -1,12 +1,10 @@
 package db;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 public class LoginHandler extends DBtask {
 
 
     @Override
-    public JsonNode doExecute(JsonNode node) {
+    public String doExecute(String s) {
         return null;
     }
 }
