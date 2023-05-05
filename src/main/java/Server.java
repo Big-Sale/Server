@@ -2,10 +2,7 @@ import beans.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import db.LoginHandler;
-import db.SearchHandler;
-import db.SignupHandler;
-import db.ValidateUser;
+import db.*;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -69,22 +66,17 @@ public class Server extends WebSocketServer {
                 search(s, webSocket);
                 break;
             case "addProduct":
-                ProductType product = null;
-              //  int id = users.get(webSocket);
-                int id = 1;
-                try {
-                    product = objectMapper.readValue(s, ProductType.class);
-                    ProductWithId productWithId = new ProductWithId(product.payload, id);
-                    db.ProductHandler.addProduct(productWithId);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-
+                addProduct(s, OnlineUsers.get(webSocket));
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + type);
         }
 
+    }
+
+    private void addProduct(String s, int userID) {
+        AddProductHandler aph = new AddProductHandler(userID);
+        aph.execute(s);
     }
 
     @Override

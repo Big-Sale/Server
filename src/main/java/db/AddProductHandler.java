@@ -1,14 +1,19 @@
 package db;
 
+import beans.ProductType;
 import beans.ProductWithId;
+import marshall.UnmarshallHandler;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class ProductHandler {
+public class AddProductHandler extends DBtask {
+    public int userID;
 
+    public AddProductHandler(int userID) {
+        this.userID = userID;
+    }
     public static void addProduct(ProductWithId product) {
         System.out.println("hello");
         Connection connection = DataBaseConnection.getDatabaseConnection();
@@ -31,5 +36,12 @@ public class ProductHandler {
         }
 
 
+    }
+
+    @Override
+    public String doExecute(String s) {
+        ProductType type = UnmarshallHandler.unmarshall(s, ProductType.class);
+        Product
+        return null;
     }
 }
