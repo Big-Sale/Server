@@ -18,16 +18,14 @@ public class ProductHandler {
             pstmt.setString(1, product.productType);
             pstmt.setFloat(2, product.price);
             pstmt.setString(3, product.colour);
-            pstmt.setInt(4, product.condition);
-            pstmt.setInt(5, product.status);
+            pstmt.setString(4, product.condition);
+            pstmt.setString(5, product.status);
             pstmt.setString(6, product.productName);
             pstmt.setInt(7, product.userId);
             pstmt.setString(8, product.date);
             pstmt.execute();
             pstmt.close();
             connection.close();
-
-            
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

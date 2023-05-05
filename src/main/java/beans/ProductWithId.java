@@ -5,8 +5,8 @@ public class ProductWithId {
     public float price;
     public String date;
     public String colour;
-    public int condition;
-    public int status;
+    public String condition;
+    public String status;
     public String productName;
     public int userId;
 
@@ -15,7 +15,7 @@ public class ProductWithId {
         price = product.price;
         colour = product.colour;
         condition = product.condition;
-        status = 1;
+        status = "available";
         productName = product.productName;
         userId = id;
         date = product.date;
