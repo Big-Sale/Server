@@ -16,7 +16,7 @@ public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
 
     public Server() {
-        super(new InetSocketAddress(1234));
+        super(new InetSocketAddress(8080));
     }
 
     @Override
