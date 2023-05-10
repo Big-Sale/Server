@@ -2,5 +2,5 @@ package beans;
 
 public class OrderHistoryType {
     public String type;
-    public Product[] payload;
+    public OrderHistoryProduct[] payload;
 }

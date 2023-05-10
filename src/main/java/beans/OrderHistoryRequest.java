@@ -1,5 +1,7 @@
 package beans;
 
 public class OrderHistoryRequest {
-    public String minDate;
+
+    public int userId;
+    public String date;
 }

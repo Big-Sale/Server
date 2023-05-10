@@ -9,6 +9,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
+import java.sql.*;
 import java.util.LinkedList;
 
 
@@ -84,21 +85,41 @@ public class Server extends WebSocketServer {
     }
 
     private void orderHistory(String s, WebSocket webSocket) {
-        // this is just test code needs to be replaced with actual db call
-        System.out.println(s);
-        Product one = new Product();
-        one.productType = "hello";
-        Product two = new Product();
-        two.productType = "world";
-        OrderHistoryType o = new OrderHistoryType();
-        o.type = "orderHistoryRequest";
-        o.payload = new Product[]{one, two};
         ObjectMapper objectMapper = new ObjectMapper();
+        LinkedList<OrderHistoryProduct> list = new LinkedList<>();
         try {
-            webSocket.send(objectMapper.writeValueAsString(o));
-        } catch (JsonProcessingException e) {
+            OrderHistoryRequestType ohrt = objectMapper.readValue(s, OrderHistoryRequestType.class);
+            Connection connection = db.DataBaseConnection.getDatabaseConnection();
+            Date date = Date.valueOf(ohrt.payload.date);
+            String query = "select * from get_order_history(" + ohrt.payload.userId + ", '" + ohrt.payload.date + "');";
+            Statement stm = connection.createStatement();
+            ResultSet rs = stm.executeQuery(query);
+            while (rs.next()) {
+                OrderHistoryProduct ohp = new OrderHistoryProduct();
+                ohp.productId = rs.getInt(1);
+                ohp.productType = rs.getString(2);
+                ohp.price = rs.getFloat(3);
+                ohp.colour = rs.getString(4);
+                ohp.condition = rs.getString(5);
+                ohp.productName = rs.getString(6);
+                ohp.seller = rs.getInt(7);
+                ohp.yearOfProduction = rs.getString(8);
+                ohp.dateOfPurchase = rs.getDate(9);
+                list.add(ohp);
+            }
+            OrderHistoryProduct[] arr = list.toArray(new OrderHistoryProduct[0]);
+            OrderHistoryType oht = new OrderHistoryType();
+            oht.type = "order_history_request";
+            oht.payload = arr;
+            String json = objectMapper.writeValueAsString(oht);
+            rs.close();
+            stm.close();
+            connection.close();
+            webSocket.send(json);
+        } catch (JsonProcessingException | SQLException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
