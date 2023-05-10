@@ -9,4 +9,5 @@ public class Product {
     public String condition;
 
     public String productName;
+
 }

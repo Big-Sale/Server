@@ -10,7 +10,7 @@ import java.sql.Statement;
 public class SignupHandler {
     private static boolean validateSignup(SignupUser user) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from users where username = " + user.username + " or email = " + user.email + ";";
+        String query = "select * from users where username = ' + user.username + ' or email = ' + user.email + ';";
         try {
             Statement stm = con.createStatement();
             ResultSet rs = stm.executeQuery(query);
@@ -32,7 +32,7 @@ public class SignupHandler {
 
     public static boolean signup(SignupUser user) {
         if (validateSignup(user)) {
-            Connection con = DataBaseConnection.getDatabaseConnection();
+           // Connection con = DataBaseConnection.getDatabaseConnection();
             return true;
         }
         return false;

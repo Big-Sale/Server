@@ -57,18 +57,13 @@ public class Server extends WebSocketServer {
         }
         String type = rootNode.get("type").asText();
         switch (type) {
-            case "login":
-                login(s, webSocket);
-                break;
-            case "signup":
-                signup(s, webSocket);
-                break;
-            case "search":
-                search(s, webSocket);
-                break;
-            case "addProduct":
+            case "login" -> login(s, webSocket);
+            case "signup" -> signup(s, webSocket);
+            case "search" -> search(s, webSocket);
+            case "notifications" -> notifications(webSocket);
+            case "addProduct" -> {
                 ProductType product = null;
-              //  int id = users.get(webSocket);
+                //  int id = users.get(webSocket);
                 int id = 1;
                 try {
                     product = objectMapper.readValue(s, ProductType.class);
@@ -77,12 +72,33 @@ public class Server extends WebSocketServer {
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + type);
+            }
+            case "OrderHistoryRequest" -> orderHistory(s, webSocket);
+            default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
+    }
+
+    private void notifications(WebSocket webSocket) {
+        //check in notifications table
+    }
+
+    private void orderHistory(String s, WebSocket webSocket) {
+        // this is just test code needs to be replaced with actual db call
+        System.out.println(s);
+        Product one = new Product();
+        one.productType = "hello";
+        Product two = new Product();
+        two.productType = "world";
+        OrderHistoryType o = new OrderHistoryType();
+        o.type = "orderHistoryRequest";
+        o.payload = new Product[]{one, two};
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            webSocket.send(objectMapper.writeValueAsString(o));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
