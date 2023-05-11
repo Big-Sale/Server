@@ -85,9 +85,14 @@ public class Server extends WebSocketServer {
     }
 
     private void notifications(WebSocket webSocket) {
-        //check in notifications table
+        int id = OnlineUsers.get(webSocket);
+        System.out.println(id);
+        LinkedList<Product> list = new LinkedList<>();
+        Connection connection = db.DataBaseConnection.getDatabaseConnection();
+        //TODO: Query somr retunerar alla produkter som id premunurerar på (och flytta till r'tt handler)
     }
 
+    //TODO FLYTTA TILL KORREKT HANDLER
     private void orderHistory(String s, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();
         LinkedList<OrderHistoryProduct> list = new LinkedList<>();
@@ -142,11 +147,12 @@ public class Server extends WebSocketServer {
             LoginType user = objectMapper.readValue(s, LoginType.class);
             System.out.println(user.payload.username + " " + user.payload.pw);
             int id = ValidateUser.validate(user.payload.username, user.payload.pw);
-            if (id == -1) {
-                webSocket.send("{\"type\":\"login\",\"payload\":{\"success\":false}}");
-            } else {
-                webSocket.send("{\"type\":\"login\",\"payload\":{\"success\":true}}");
+            System.out.println(id);
+            if (id != -1) {
+                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":"+id+"}}");
                 OnlineUsers.put(id, webSocket);
+            } else {
+                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":-1}}");
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -156,10 +162,13 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             SignupType signup = objectMapper.readValue(s, SignupType.class);
-            if (db.SignupHandler.signup(signup.payload)) {
-                webSocket.send("{\"type\":\"signup\",\"payload\":{\"success\":true}}");
+            int id = db.SignupHandler.signup(signup.payload);
+            System.out.println(id);
+            if (id != -1) {
+                OnlineUsers.put(id, webSocket);
+                webSocket.send("{\"type\":\"signup\",\"payload\":{\"id\":" + id + "}}");
             } else {
-                webSocket.send("{\"type\":\"signup\",\"payload\":{\"success\":false}}");
+                webSocket.send("{\"type\":\"signup\",\"payload\":{\"id\":-1}}");
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

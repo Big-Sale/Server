@@ -5,7 +5,7 @@ import java.sql.*;
 public class ValidateUser {
     public static int validate(String username, String pw) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select pw, userid from users where username = " + username +";";
+        String query = "select pw, userid from users where username = '" + username +"';";
         try {
             Statement stm = con.createStatement();
             ResultSet rs = stm.executeQuery(query);
