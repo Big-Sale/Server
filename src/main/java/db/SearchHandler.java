@@ -16,7 +16,7 @@ public class SearchHandler {
 
     public BuyProduct[] search(Search parameters) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from products where status = 'available' and producttype = '" + parameters.productType + "' and price between " + parameters.minPrice + " and " + parameters.maxPrice + " and conditions = '" + parameters.condition + "';";
+        String query = "select * from products where status = 'available' and producttype like '%" + parameters.productType + "%' and price between " + parameters.minPrice + " and " + parameters.maxPrice + " and conditions = '" + parameters.condition + "';";
         LinkedList<BuyProduct> products = new LinkedList<>();
         try {
             Statement stm = con.createStatement();
@@ -40,7 +40,6 @@ public class SearchHandler {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 
 

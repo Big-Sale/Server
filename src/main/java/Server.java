@@ -178,8 +178,10 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             SearchType search = objectMapper.readValue(s, SearchType.class);
-            searchHandler.search(search.payload);
-
+            SearchRequest buyProductRequest = new SearchRequest();
+            buyProductRequest.type = "search";
+            buyProductRequest.payload = searchHandler.search(search.payload);
+            webSocket.send(objectMapper.writeValueAsString(buyProductRequest));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
