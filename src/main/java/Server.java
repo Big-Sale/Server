@@ -75,9 +75,13 @@ public class Server extends WebSocketServer {
                 }
             }
             case "OrderHistoryRequest" -> orderHistory(s, webSocket);
+            case "buyProduct" -> buyProduct(s, webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
+    }
+
+    private void buyProduct(String s, WebSocket webSocket) {
     }
 
     private void notifications(WebSocket webSocket) {
