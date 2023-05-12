@@ -8,6 +8,7 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import javax.swing.plaf.nimbus.State;
 import java.net.InetSocketAddress;
 import java.sql.*;
 import java.util.LinkedList;
@@ -87,8 +88,38 @@ public class Server extends WebSocketServer {
     private void notifications(WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
         System.out.println(id);
-        LinkedList<Product> list = new LinkedList<>();
-        Connection connection = db.DataBaseConnection.getDatabaseConnection();
+        LinkedList<BuyProduct> list = new LinkedList<>();
+        try {
+            Connection connection = db.DataBaseConnection.getDatabaseConnection();
+            String query = "select * from get_notifications(" + id + ");";
+            Statement stm = connection.createStatement();
+            ResultSet rs = stm.executeQuery(query);
+            while (rs.next()) {
+                BuyProduct product = new BuyProduct();
+                product.productId = rs.getInt(1);
+                product.productType = rs.getString(2);
+                product.price = rs.getFloat(3);
+                product.colour = rs.getString(4);
+                product.condition = rs.getString(5);
+                product.productName = rs.getString(7);
+                product.seller = rs.getInt(8);
+                product.yearOfProduction = rs.getString(9);
+                list.add(product);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        BuyProduct[] arr = list.toArray(new BuyProduct[0]);
+        ObjectMapper objectMapper = new ObjectMapper();
+        BuyProductType buyProductType = new BuyProductType();
+        buyProductType.type = "notifications";
+        buyProductType.payload = arr;
+        try {
+            String json = objectMapper.writeValueAsString(buyProductType);
+            webSocket.send(json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         //TODO: Query somr retunerar alla produkter som id premunurerar på (och flytta till r'tt handler)
     }
 
