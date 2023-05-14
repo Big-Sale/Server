@@ -14,7 +14,6 @@ public class SearchHandler {
     public BuyProduct[] search(Search parameters) {
         Connection con = DataBaseConnection.getDatabaseConnection();
         LinkedList<BuyProduct> products = new LinkedList<>();
-        System.out.println(parameters.productType);
         SearchBuilder searchBuilder = new SearchBuilder(con);
         searchBuilder.productType(parameters.productType)
                 .minPrice(parameters.minPrice)
@@ -45,7 +44,7 @@ public class SearchHandler {
     }
 
 
-    public static LinkedList<BuyProduct> getRandomProducts() {
+    public static BuyProduct[] getRandomProducts() {
         Connection con = DataBaseConnection.getDatabaseConnection();
         String query = "select * from products where status = 'available' order by random() limit 100;";
         LinkedList<BuyProduct> products = new LinkedList<>();
@@ -72,7 +71,7 @@ public class SearchHandler {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return products;
+        return products.toArray(new BuyProduct[0]);
     }
 
 

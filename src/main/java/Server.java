@@ -2,13 +2,11 @@ import beans.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import db.SearchHandler;
-import db.ValidateUser;
+import db.*;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
-import javax.swing.plaf.nimbus.State;
 import java.net.InetSocketAddress;
 import java.sql.*;
 import java.util.LinkedList;
@@ -24,21 +22,16 @@ public class Server extends WebSocketServer {
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
         System.out.println("New connection from " + webSocket.getRemoteSocketAddress());
-
-        LinkedList<BuyProduct> list = SearchHandler.getRandomProducts();
-        BuyProduct[] arr = list.toArray(new BuyProduct[0]);
         ObjectMapper objectMapper = new ObjectMapper();
         BuyProductType buyProductType = new BuyProductType();
         buyProductType.type = "randomProducts";
-        buyProductType.payload = arr;
+        buyProductType.payload = SearchHandler.getRandomProducts();
         try {
             String json = objectMapper.writeValueAsString(buyProductType);
             webSocket.send(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 
     @Override
@@ -48,52 +41,54 @@ public class Server extends WebSocketServer {
     }
 
     @Override
-    public void onMessage(WebSocket webSocket, String s) {
-        System.out.println("Message from " + webSocket.getRemoteSocketAddress() + ": " + s);
+    public void onMessage(WebSocket webSocket, String json) {
+        System.out.println("Message from " + webSocket.getRemoteSocketAddress() + ": " + json);
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = null;
         try {
-            rootNode = objectMapper.readTree(s);
+            rootNode = objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
         String type = rootNode.get("type").asText();
         switch (type) {
-            case "login" -> login(s, webSocket);
-            case "signup" -> signup(s, webSocket);
-            case "search" -> search(s, webSocket);
+            case "login" -> login(json, webSocket);
+            case "signup" -> signup(json, webSocket);
+            case "search" -> search(json, webSocket);
             case "notifications" -> notifications(webSocket);
-            case "addProduct" -> {
-                ProductType product = null;
-                //  int id = users.get(webSocket);
-                int id = 1;
-                try {
-                    product = objectMapper.readValue(s, ProductType.class);
-                    ProductWithId productWithId = new ProductWithId(product.payload, id);
-                    db.ProductHandler.addProduct(productWithId);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            case "OrderHistoryRequest" -> orderHistory(s, webSocket);
-            case "buyProduct" -> buyProduct(s, webSocket);
+            case "addProduct" -> addProduct(json, webSocket);
+            case "OrderHistoryRequest" -> orderHistory(json, webSocket);
+            case "buyProduct" -> buyProduct(json, webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
     }
 
-    private void buyProduct(String s, WebSocket webSocket) {
+    private void buyProduct(String json, WebSocket webSocket) {
     }
+
+    private void addProduct(String json, WebSocket webSocket) {
+        int id = OnlineUsers.get(webSocket);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            ProductType product = objectMapper.readValue(json, ProductType.class);
+            ProductWithId productWithId = new ProductWithId(product.payload, id);
+            ProductHandler.addProduct(productWithId);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private void notifications(WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
-        System.out.println(id);
         LinkedList<BuyProduct> list = new LinkedList<>();
         try {
             Connection connection = db.DataBaseConnection.getDatabaseConnection();
-            String query = "select * from get_notifications(" + id + ");";
-            Statement stm = connection.createStatement();
-            ResultSet rs = stm.executeQuery(query);
+            String query = "select * from get_notifications(?);";
+            PreparedStatement stm = connection.prepareStatement(query);
+            stm.setInt(1, id);
+            ResultSet rs = stm.executeQuery();
             while (rs.next()) {
                 BuyProduct product = new BuyProduct();
                 product.productId = rs.getInt(1);
@@ -124,15 +119,16 @@ public class Server extends WebSocketServer {
     }
 
     //TODO FLYTTA TILL KORREKT HANDLER
-    private void orderHistory(String s, WebSocket webSocket) {
+    private void orderHistory(String json, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();
         LinkedList<OrderHistoryProduct> list = new LinkedList<>();
         try {
-            OrderHistoryRequestType ohrt = objectMapper.readValue(s, OrderHistoryRequestType.class);
+            OrderHistoryRequestType ohrt = objectMapper.readValue(json, OrderHistoryRequestType.class);
             Connection connection = db.DataBaseConnection.getDatabaseConnection();
-            Date date = Date.valueOf(ohrt.payload.date);
-            String query = "select * from get_order_history(" + ohrt.payload.userId + ", '" + ohrt.payload.date + "');";
-            Statement stm = connection.createStatement();
+            String query = "select * from get_order_history(?, ?);";
+            PreparedStatement stm = connection.prepareStatement(query);
+            stm.setInt(1, ohrt.payload.userId);
+            stm.setDate(2, Date.valueOf(ohrt.payload.date));
             ResultSet rs = stm.executeQuery(query);
             while (rs.next()) {
                 OrderHistoryProduct ohp = new OrderHistoryProduct();
@@ -151,11 +147,11 @@ public class Server extends WebSocketServer {
             OrderHistoryType oht = new OrderHistoryType();
             oht.type = "order_history_request";
             oht.payload = arr;
-            String json = objectMapper.writeValueAsString(oht);
+            String jsonReturn = objectMapper.writeValueAsString(oht);
             rs.close();
             stm.close();
             connection.close();
-            webSocket.send(json);
+            webSocket.send(jsonReturn);
         } catch (JsonProcessingException | SQLException e) {
             throw new RuntimeException(e);
         }
@@ -176,9 +172,7 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             LoginType user = objectMapper.readValue(s, LoginType.class);
-            System.out.println(user.payload.username + " " + user.payload.pw);
             int id = ValidateUser.validate(user.payload.username, user.payload.pw);
-            System.out.println(id);
             if (id != -1) {
                 webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":"+id+"}}");
                 OnlineUsers.put(id, webSocket);
@@ -193,8 +187,7 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             SignupType signup = objectMapper.readValue(s, SignupType.class);
-            int id = db.SignupHandler.signup(signup.payload);
-            System.out.println(id);
+            int id = SignupHandler.signup(signup.payload);
             if (id != -1) {
                 OnlineUsers.put(id, webSocket);
                 webSocket.send("{\"type\":\"signup\",\"payload\":{\"id\":" + id + "}}");

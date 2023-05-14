@@ -2,10 +2,7 @@ package db;
 
 import beans.SignupUser;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class SignupHandler {
     private static boolean validateSignup(SignupUser user) {
@@ -33,11 +30,17 @@ public class SignupHandler {
     public static int signup(SignupUser user) {
         if (validateSignup(user)) {
             Connection con = DataBaseConnection.getDatabaseConnection();
-            String query = "select signup_user('" + user.firstName + "', '" + user.lastName + "', '" + user.dateOfBirth + "', '" + user.email + "', '" + user.username + "', '" + user.pw + "');";
-            Statement stm;
+            String query = "select signup_user(?, ?, ?, ?, ?, ?);";
+            PreparedStatement stm;
             try {
-                stm = con.createStatement();
-                ResultSet rs = stm.executeQuery(query);
+                stm = con.prepareStatement(query);
+                stm.setString(1, user.firstName);
+                stm.setString(2, user.lastName);
+                stm.setDate(3, Date.valueOf(user.dateOfBirth));
+                stm.setString(4, user.email);
+                stm.setString(5, user.username);
+                stm.setString(6, user.pw);
+                ResultSet rs = stm.executeQuery();
                 rs.next();
                 int id = rs.getInt(1);
                 rs.close();

@@ -10,11 +10,10 @@ import java.sql.SQLException;
 public class ProductHandler {
 
     public static void addProduct(ProductWithId product) {
-        System.out.println("hello");
         Connection connection = DataBaseConnection.getDatabaseConnection();
-        String QUERY = "call addproduct(?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "call addproduct(?, ?, ?, ?, ?, ?, ?, ?)";
         try {
-            PreparedStatement pstmt = connection.prepareStatement(QUERY);
+            PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, product.productType);
             pstmt.setFloat(2, product.price);
             pstmt.setString(3, product.colour);
@@ -29,7 +28,5 @@ public class ProductHandler {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-
     }
 }

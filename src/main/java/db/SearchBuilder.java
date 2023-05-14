@@ -50,7 +50,6 @@ public class SearchBuilder {
     }
 
     public PreparedStatement build() throws SQLException {
-        System.out.println(query.toString());
         PreparedStatement statement = connection.prepareStatement(query.toString());
         for (int i = 0; i < parameters.size(); i++) {
             statement.setObject(i + 1, parameters.get(i));
