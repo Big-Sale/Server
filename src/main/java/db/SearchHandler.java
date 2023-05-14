@@ -4,10 +4,7 @@ import beans.BuyProduct;
 import beans.Product;
 import beans.Search;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedList;
 
 public class SearchHandler {
@@ -16,11 +13,16 @@ public class SearchHandler {
 
     public BuyProduct[] search(Search parameters) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from products where status = 'available' and producttype like '%" + parameters.productType + "%' and price between " + parameters.minPrice + " and " + parameters.maxPrice + " and conditions = '" + parameters.condition + "';";
         LinkedList<BuyProduct> products = new LinkedList<>();
+        System.out.println(parameters.productType);
+        SearchBuilder searchBuilder = new SearchBuilder(con);
+        searchBuilder.productType(parameters.productType)
+                .minPrice(parameters.minPrice)
+                .maxPrice(parameters.maxPrice)
+                .condition(parameters.condition);
         try {
-            Statement stm = con.createStatement();
-            ResultSet rs = stm.executeQuery(query);
+            PreparedStatement stm = searchBuilder.build();
+            ResultSet rs = stm.executeQuery();
             while (rs.next()) {
                 BuyProduct product = new BuyProduct();
                 product.productId = rs.getInt("productid");
