@@ -14,6 +14,7 @@ import java.util.LinkedList;
 
 public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
+    ProductHandler productHandler = new ProductHandler();
 
     public Server() {
         super(new InetSocketAddress(8080));
@@ -23,11 +24,11 @@ public class Server extends WebSocketServer {
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
         System.out.println("New connection from " + webSocket.getRemoteSocketAddress());
         ObjectMapper objectMapper = new ObjectMapper();
-        BuyProductType buyProductType = new BuyProductType();
-        buyProductType.type = "randomProducts";
-        buyProductType.payload = SearchHandler.getRandomProducts();
+        ReturnProductType returnProductType = new ReturnProductType();
+        returnProductType.type = "randomProducts";
+        returnProductType.payload = SearchHandler.getRandomProducts();
         try {
-            String json = objectMapper.writeValueAsString(buyProductType);
+            String json = objectMapper.writeValueAsString(returnProductType);
             webSocket.send(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -65,6 +66,35 @@ public class Server extends WebSocketServer {
     }
 
     private void buyProduct(String json, WebSocket webSocket) {
+        int id = OnlineUsers.get(webSocket);
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            BuyProductType product = objectMapper.readValue(json, BuyProductType.class);
+            Integer[] products = product.productIDs;
+            productHandler.buyProduct(id, products);
+            for (Integer i : products) {
+                Connection connection = DataBaseConnection.getDatabaseConnection();
+                String query = "SELECT seller FROM products WHERE productid = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                ResultSet rs = preparedStatement.executeQuery();
+                if (rs.next()) {
+                    int seller = rs.getInt("seller");
+                    if (OnlineUsers.contains(seller)){
+                        NotificationType notificationType = new NotificationType();
+                        notificationType.type = "pending_order_notification";
+                        OnlineUsers.get(seller).send(objectMapper.writeValueAsString(notificationType));
+                    }
+                }
+                rs.close();
+                preparedStatement.close();
+                connection.close();
+            }
+        } catch (JsonProcessingException e ){
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void addProduct(String json, WebSocket webSocket) {
@@ -149,11 +179,11 @@ public class Server extends WebSocketServer {
         }
         Product[] arr = list.toArray(new Product[0]);
         ObjectMapper objectMapper = new ObjectMapper();
-        BuyProductType buyProductType = new BuyProductType();
-        buyProductType.type = "notifications";
-        buyProductType.payload = arr;
+        ReturnProductType returnProductType = new ReturnProductType();
+        returnProductType.type = "notifications";
+        returnProductType.payload = arr;
         try {
-            String json = objectMapper.writeValueAsString(buyProductType);
+            String json = objectMapper.writeValueAsString(returnProductType);
             webSocket.send(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

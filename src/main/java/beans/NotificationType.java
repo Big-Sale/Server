@@ -1,5 +1,5 @@
 package beans;
 
 public class NotificationType {
-    String type;
+    public String type;
 }

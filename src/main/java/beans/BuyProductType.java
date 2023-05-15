@@ -1,6 +1,6 @@
 package beans;
 
 public class BuyProductType {
-    public String type;
-    public Product[] payload;
+     public String type;
+     public Integer[] productIDs;
 }
