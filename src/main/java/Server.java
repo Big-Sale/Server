@@ -110,6 +110,7 @@ public class Server extends WebSocketServer {
                 Connection connection = DataBaseConnection.getDatabaseConnection();
                 String query = "SELECT seller FROM products WHERE productid = ?";
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setInt(1, i);
                 ResultSet rs = preparedStatement.executeQuery();
                 if (rs.next()) {
                     int seller = rs.getInt("seller");

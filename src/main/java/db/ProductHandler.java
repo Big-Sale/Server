@@ -9,15 +9,12 @@ public class ProductHandler {
      public void buyProduct(int userID, Integer[] products) {
           try {
                Connection connection = DataBaseConnection.getDatabaseConnection();
-               String sql = "CALL insert_into_pending_order(?, ?)";
+               String sql = "CALL insert_into_pending_orders(?, ?)";
                PreparedStatement statement = connection.prepareStatement(sql);
-
                Array productArray = connection.createArrayOf("integer", products);
-               connection.createArrayOf("integer", products);
                statement.setInt(1, userID);
                statement.setArray(2, productArray);
-
-               statement.executeUpdate();
+               statement.execute();
                statement.close();
                connection.close();
           } catch (SQLException e) {
