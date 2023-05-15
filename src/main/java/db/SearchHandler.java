@@ -1,12 +1,10 @@
 package db;
 
 import beans.BuyProduct;
+import beans.Product;
 import beans.Search;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedList;
 
 public class SearchHandler extends DBtask {
@@ -23,15 +21,19 @@ public class SearchHandler extends DBtask {
         return null;
     }
 
-    public BuyProduct[] search(Search parameters) {
+    public Product[] search(Search parameters) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from products where status = 'available' and producttype = '" + parameters.productType + "' and price between " + parameters.minPrice + " and " + parameters.maxPrice + " and conditions = '" + parameters.condition + "';";
-        LinkedList<BuyProduct> products = new LinkedList<>();
+        LinkedList<Product> products = new LinkedList<>();
+        SearchBuilder searchBuilder = new SearchBuilder(con);
+        searchBuilder.productType(parameters.productType)
+                .minPrice(parameters.minPrice)
+                .maxPrice(parameters.maxPrice)
+                .condition(parameters.condition);
         try {
-            Statement stm = con.createStatement();
-            ResultSet rs = stm.executeQuery(query);
+            PreparedStatement stm = searchBuilder.build();
+            ResultSet rs = stm.executeQuery();
             while (rs.next()) {
-                BuyProduct product = new BuyProduct();
+                Product product = new Product();
                 product.productId = rs.getInt("productid");
                 product.productType = rs.getString("producttype");
                 product.price = rs.getFloat("price");
@@ -45,22 +47,22 @@ public class SearchHandler extends DBtask {
             rs.close();
             stm.close();
             con.close();
-            return products.toArray(new BuyProduct[0]);
+            return products.toArray(new Product[0]);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 
-    public static LinkedList<BuyProduct> getRandomProducts() {
+
+    public static Product[] getRandomProducts() {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from products where status = 'available' order by random() limit 5;";
-        LinkedList<BuyProduct> products = new LinkedList<>();
+        String query = "select * from products where status = 'available' order by random() limit 100;";
+        LinkedList<Product> products = new LinkedList<>();
         try {
             Statement stm = con.createStatement();
             ResultSet rs = stm.executeQuery(query);
             while (rs.next()) {
-                BuyProduct product = new BuyProduct();
+                Product product = new Product();
                 product.productId = rs.getInt("productid");
                 product.productType = rs.getString("producttype");
                 product.price = rs.getFloat("price");
@@ -79,7 +81,7 @@ public class SearchHandler extends DBtask {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return products;
+        return products.toArray(new Product[0]);
     }
 
 

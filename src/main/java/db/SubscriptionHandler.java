@@ -7,21 +7,16 @@ import java.sql.SQLException;
 
 public class SubscriptionHandler {
 
+
     public static void alert(String productName) {
         Connection connection = DataBaseConnection.getDatabaseConnection();
-        String QUERY = "select userid from subscription where productname = ?";
+        String query = "select userid from subscription where productname = ?";
         try {
-            PreparedStatement pstmt = null;
-            try {
-                pstmt = connection.prepareStatement(QUERY);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, productName);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 int userId = rs.getInt("userid");
-
             }
             pstmt.close();
             connection.close();

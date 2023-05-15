@@ -1,6 +1,6 @@
 package beans;
 
-public class BuyProductType {
+public class SearchRequest {
     public String type;
     public Product[] payload;
 }
