@@ -60,9 +60,43 @@ public class Server extends WebSocketServer {
             case "addProduct" -> addProduct(json, webSocket);
             case "OrderHistoryRequest" -> orderHistory(json, webSocket);
             case "buyProduct" -> buyProduct(json, webSocket);
+            case "removeNotification" -> removeNotification(rootNode.get("payload").asInt(), webSocket);
+            case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
+    }
+
+    private void subscribe(String payload, WebSocket webSocket) {
+        int userId = OnlineUsers.get(webSocket);
+        Connection conn = DataBaseConnection.getDatabaseConnection();
+        String query = "insert into subscriptions values (?, ?);";
+        try {
+            PreparedStatement stm = conn.prepareStatement(query);
+            stm.setInt(1, userId);
+            stm.setString(2, payload);
+            stm.executeUpdate();
+            stm.close();
+            conn.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void removeNotification(int productId, WebSocket webSocket) {
+        int userId = OnlineUsers.get(webSocket);
+        Connection conn = DataBaseConnection.getDatabaseConnection();
+        String query = "delete from notifications where userid = ? and productid = ?;";
+        try {
+            PreparedStatement stm = conn.prepareStatement(query);
+            stm.setInt(1, userId);
+            stm.setInt(2, productId);
+            stm.executeUpdate();
+            stm.close();
+            conn.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void buyProduct(String json, WebSocket webSocket) {
@@ -102,6 +136,8 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             ProductType product = objectMapper.readValue(json, ProductType.class);
+            product.payload.seller = id;
+            product.payload.status = "available";
             int productId = ProductHandler.addProduct(product.payload);
             checkNotifications(product.payload, productId);
         } catch (JsonProcessingException e) {
@@ -110,8 +146,7 @@ public class Server extends WebSocketServer {
     }
 
     private void checkNotifications(Product product, int productId) {
-        LinkedList<Integer> online = new LinkedList<>();
-        LinkedList<Integer> offline = new LinkedList<>();
+        LinkedList<Integer> userIds = new LinkedList<>();
         try {
             Connection conn = db.DataBaseConnection.getDatabaseConnection();
             String query = "select userid from subscriptions where productname = ?;";
@@ -121,37 +156,33 @@ public class Server extends WebSocketServer {
             while (rs.next()) {
                 int id = rs.getInt(1);
                 if (OnlineUsers.contains(id)) {
-                    online.add(id);
-                } else {
-                    offline.add(id);
+                    WebSocket webSocket = OnlineUsers.get(id);
+                    if (webSocket != null && id != product.seller) {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        NotificationType notificationType = new NotificationType();
+                        notificationType.type = "subscribed_product";
+                        notificationType.payload = product;
+                        String json = objectMapper.writeValueAsString(notificationType);
+                        webSocket.send(json);
+                    }
                 }
+                userIds.add(id);
             }
             rs.close();
             stm.close();
-            conn.close();
-            ObjectMapper objectMapper = new ObjectMapper();
-            String json = objectMapper.writeValueAsString(product);
-            for (Integer integer : online) {
-                WebSocket webSocket = OnlineUsers.get(integer);
-                if (webSocket != null) {
-                    webSocket.send(json);
-                }
-            }
-            Connection con = DataBaseConnection.getDatabaseConnection();
             String q = "call add_notification(?, ?);";
-            PreparedStatement st = con.prepareStatement(q);
-            st.setArray(1, con.createArrayOf("integer", offline.toArray()));
+            PreparedStatement st = conn.prepareStatement(q);
+            st.setArray(1, conn.createArrayOf("integer", userIds.toArray()));
             st.setInt(2, productId);
             st.execute();
             st.close();
-            con.close();
+            conn.close();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
-
 
     private void notifications(WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
