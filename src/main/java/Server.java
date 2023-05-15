@@ -104,7 +104,7 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             BuyProductType product = objectMapper.readValue(json, BuyProductType.class);
-            Integer[] products = product.productIDs;
+            Integer[] products = product.payload;
             productHandler.buyProduct(id, products);
             for (Integer i : products) {
                 Connection connection = DataBaseConnection.getDatabaseConnection();

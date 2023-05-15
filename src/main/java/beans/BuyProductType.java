@@ -2,5 +2,5 @@ package beans;
 
 public class BuyProductType {
      public String type;
-     public Integer[] productIDs;
+     public Integer[] payload;
 }
