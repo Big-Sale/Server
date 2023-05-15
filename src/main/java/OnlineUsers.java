@@ -25,4 +25,8 @@ public class OnlineUsers {
         online2.remove(webSocket);
         online.remove(online2.get(webSocket));
     }
+
+    public static boolean contains(Integer integer) {
+        return online.containsKey(integer);
+    }
 }

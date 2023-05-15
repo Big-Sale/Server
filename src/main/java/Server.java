@@ -72,8 +72,51 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             ProductType product = objectMapper.readValue(json, ProductType.class);
-            ProductWithId productWithId = new ProductWithId(product.payload, id);
-            ProductHandler.addProduct(productWithId);
+            int productId = ProductHandler.addProduct(product.payload);
+            checkNotifications(product.payload, productId);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void checkNotifications(Product product, int productId) {
+        LinkedList<Integer> online = new LinkedList<>();
+        LinkedList<Integer> offline = new LinkedList<>();
+        try {
+            Connection conn = db.DataBaseConnection.getDatabaseConnection();
+            String query = "select userid from subscriptions where productname = ?;";
+            PreparedStatement stm = conn.prepareStatement(query);
+            stm.setString(1, product.productType);
+            ResultSet rs = stm.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt(1);
+                if (OnlineUsers.contains(id)) {
+                    online.add(id);
+                } else {
+                    offline.add(id);
+                }
+            }
+            rs.close();
+            stm.close();
+            conn.close();
+            ObjectMapper objectMapper = new ObjectMapper();
+            String json = objectMapper.writeValueAsString(product);
+            for (Integer integer : online) {
+                WebSocket webSocket = OnlineUsers.get(integer);
+                if (webSocket != null) {
+                    webSocket.send(json);
+                }
+            }
+            Connection con = DataBaseConnection.getDatabaseConnection();
+            String q = "call add_notification(?, ?);";
+            PreparedStatement st = con.prepareStatement(q);
+            st.setArray(1, con.createArrayOf("integer", offline.toArray()));
+            st.setInt(2, productId);
+            st.execute();
+            st.close();
+            con.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -82,7 +125,7 @@ public class Server extends WebSocketServer {
 
     private void notifications(WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
-        LinkedList<BuyProduct> list = new LinkedList<>();
+        LinkedList<Product> list = new LinkedList<>();
         try {
             Connection connection = db.DataBaseConnection.getDatabaseConnection();
             String query = "select * from get_notifications(?);";
@@ -90,7 +133,7 @@ public class Server extends WebSocketServer {
             stm.setInt(1, id);
             ResultSet rs = stm.executeQuery();
             while (rs.next()) {
-                BuyProduct product = new BuyProduct();
+                Product product = new Product();
                 product.productId = rs.getInt(1);
                 product.productType = rs.getString(2);
                 product.price = rs.getFloat(3);
@@ -104,7 +147,7 @@ public class Server extends WebSocketServer {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        BuyProduct[] arr = list.toArray(new BuyProduct[0]);
+        Product[] arr = list.toArray(new Product[0]);
         ObjectMapper objectMapper = new ObjectMapper();
         BuyProductType buyProductType = new BuyProductType();
         buyProductType.type = "notifications";
@@ -129,7 +172,7 @@ public class Server extends WebSocketServer {
             PreparedStatement stm = connection.prepareStatement(query);
             stm.setInt(1, ohrt.payload.userId);
             stm.setDate(2, Date.valueOf(ohrt.payload.date));
-            ResultSet rs = stm.executeQuery(query);
+            ResultSet rs = stm.executeQuery();
             while (rs.next()) {
                 OrderHistoryProduct ohp = new OrderHistoryProduct();
                 ohp.productId = rs.getInt(1);
@@ -167,14 +210,13 @@ public class Server extends WebSocketServer {
     }
 
 
-
     private void login(String s, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             LoginType user = objectMapper.readValue(s, LoginType.class);
             int id = ValidateUser.validate(user.payload.username, user.payload.pw);
             if (id != -1) {
-                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":"+id+"}}");
+                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
                 OnlineUsers.put(id, webSocket);
             } else {
                 webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":-1}}");
@@ -183,6 +225,7 @@ public class Server extends WebSocketServer {
             throw new RuntimeException(e);
         }
     }
+
     private void signup(String s, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
@@ -198,6 +241,7 @@ public class Server extends WebSocketServer {
             throw new RuntimeException(e);
         }
     }
+
     private void search(String s, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {

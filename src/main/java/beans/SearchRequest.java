@@ -2,5 +2,5 @@ package beans;
 
 public class SearchRequest {
     public String type;
-    public BuyProduct[] payload;
+    public Product[] payload;
 }

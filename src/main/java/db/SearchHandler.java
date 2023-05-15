@@ -1,6 +1,5 @@
 package db;
 
-import beans.BuyProduct;
 import beans.Product;
 import beans.Search;
 
@@ -11,9 +10,9 @@ public class SearchHandler {
 
 
 
-    public BuyProduct[] search(Search parameters) {
+    public Product[] search(Search parameters) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        LinkedList<BuyProduct> products = new LinkedList<>();
+        LinkedList<Product> products = new LinkedList<>();
         SearchBuilder searchBuilder = new SearchBuilder(con);
         searchBuilder.productType(parameters.productType)
                 .minPrice(parameters.minPrice)
@@ -23,7 +22,7 @@ public class SearchHandler {
             PreparedStatement stm = searchBuilder.build();
             ResultSet rs = stm.executeQuery();
             while (rs.next()) {
-                BuyProduct product = new BuyProduct();
+                Product product = new Product();
                 product.productId = rs.getInt("productid");
                 product.productType = rs.getString("producttype");
                 product.price = rs.getFloat("price");
@@ -37,22 +36,22 @@ public class SearchHandler {
             rs.close();
             stm.close();
             con.close();
-            return products.toArray(new BuyProduct[0]);
+            return products.toArray(new Product[0]);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
 
-    public static BuyProduct[] getRandomProducts() {
+    public static Product[] getRandomProducts() {
         Connection con = DataBaseConnection.getDatabaseConnection();
         String query = "select * from products where status = 'available' order by random() limit 100;";
-        LinkedList<BuyProduct> products = new LinkedList<>();
+        LinkedList<Product> products = new LinkedList<>();
         try {
             Statement stm = con.createStatement();
             ResultSet rs = stm.executeQuery(query);
             while (rs.next()) {
-                BuyProduct product = new BuyProduct();
+                Product product = new Product();
                 product.productId = rs.getInt("productid");
                 product.productType = rs.getString("producttype");
                 product.price = rs.getFloat("price");
@@ -71,7 +70,7 @@ public class SearchHandler {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return products.toArray(new BuyProduct[0]);
+        return products.toArray(new Product[0]);
     }
 
 

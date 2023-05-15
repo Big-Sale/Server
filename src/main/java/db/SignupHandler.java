@@ -7,10 +7,12 @@ import java.sql.*;
 public class SignupHandler {
     private static boolean validateSignup(SignupUser user) {
         Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select * from users where username = '" + user.username + "' or email = '" + user.email + "';";
+        String query = "select * from users where username = ? or email = ?;";
         try {
-            Statement stm = con.createStatement();
-            ResultSet rs = stm.executeQuery(query);
+            PreparedStatement stm = con.prepareStatement(query);
+            stm.setString(1, user.username);
+            stm.setString(2, user.email);
+            ResultSet rs = stm.executeQuery();
             if (rs.next()) {
                 stm.close();
                 rs.close();

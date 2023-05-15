@@ -1,17 +1,14 @@
 package db;
 
-import beans.ProductWithId;
+import beans.Product;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class ProductHandler {
 
-    public static void addProduct(ProductWithId product) {
+    public static int addProduct(Product product) {
         Connection connection = DataBaseConnection.getDatabaseConnection();
-        String query = "call addproduct(?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "select insert_product(?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             PreparedStatement pstmt = connection.prepareStatement(query);
             pstmt.setString(1, product.productType);
@@ -20,11 +17,17 @@ public class ProductHandler {
             pstmt.setString(4, product.condition);
             pstmt.setString(5, product.status);
             pstmt.setString(6, product.productName);
-            pstmt.setInt(7, product.userId);
+            pstmt.setInt(7, product.seller);
             pstmt.setString(8, product.date);
-            pstmt.execute();
+            ResultSet rs = pstmt.executeQuery();
+            int id = -1;
+            if (rs.next()) {
+                id = rs.getInt(1);
+            }
+            rs.close();
             pstmt.close();
             connection.close();
+            return id;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

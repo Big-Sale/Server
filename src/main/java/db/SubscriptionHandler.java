@@ -8,7 +8,6 @@ import java.sql.SQLException;
 public class SubscriptionHandler {
 
 
-    //wtf is the point of this? figure it out
     public static void alert(String productName) {
         Connection connection = DataBaseConnection.getDatabaseConnection();
         String query = "select userid from subscription where productname = ?";
