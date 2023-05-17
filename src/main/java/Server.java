@@ -281,7 +281,6 @@ public class Server extends WebSocketServer {
         webSocket.close();
     }
 
-
     private void login(String s, WebSocket webSocket) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
