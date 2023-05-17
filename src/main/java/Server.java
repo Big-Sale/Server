@@ -176,7 +176,7 @@ public class Server extends WebSocketServer {
             String q = "call add_notification(?, ?);";
             PreparedStatement st = conn.prepareStatement(q);
             st.setArray(1, conn.createArrayOf("integer", userIds.toArray()));
-            st.setInt(2, productId);
+            st.setInt(2, product.productId);
             st.execute();
             st.close();
             conn.close();
@@ -208,6 +208,9 @@ public class Server extends WebSocketServer {
                 product.yearOfProduction = rs.getString(9);
                 list.add(product);
             }
+            rs.close();
+            stm.close();
+            connection.close();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
