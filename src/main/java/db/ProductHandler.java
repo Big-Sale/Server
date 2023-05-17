@@ -7,16 +7,12 @@ import java.sql.*;
 public class ProductHandler {
 
      public void buyProduct(int userID, Integer[] products) {
-          try {
-               Connection connection = DataBaseConnection.getDatabaseConnection();
-               String sql = "CALL insert_into_pending_orders(?, ?)";
-               PreparedStatement statement = connection.prepareStatement(sql);
-               Array productArray = connection.createArrayOf("integer", products);
-               statement.setInt(1, userID);
-               statement.setArray(2, productArray);
-               statement.execute();
-               statement.close();
-               connection.close();
+          try (Connection con = DataBaseConnection.getDatabaseConnection();
+          PreparedStatement stm = con.prepareStatement("CALL insert_into_pending_orders(?, ?)")) {
+               Array productArray = con.createArrayOf("integer", products);
+               stm.setInt(1, userID);
+               stm.setArray(2, productArray);
+               stm.execute();
           } catch (SQLException e) {
                throw new RuntimeException(e);
           }
