@@ -2,7 +2,7 @@ package db;
 
 import java.sql.*;
 
-public class ValidateUser {
+Lagpublic class ValidateUser extends DBtask {
     public static int validate(String username, String pw) {
         Connection con = DataBaseConnection.getDatabaseConnection();
         String query = "select pw, userid from users where username = ?;";
@@ -27,5 +27,10 @@ public class ValidateUser {
             throw new RuntimeException(e);
         }
         return -1;
+    }
+
+    @Override
+    public String doExecute(String s) {
+        return null;
     }
 }

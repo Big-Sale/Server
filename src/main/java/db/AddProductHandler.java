@@ -1,7 +1,6 @@
 package db;
 
 import beans.ProductType;
-import beans.ProductWithId;
 import marshall.UnmarshallHandler;
 import beans.Product;
 
@@ -49,6 +48,7 @@ public class AddProductHandler extends DBtask {
     @Override
     public String doExecute(String s) {
         ProductType type = UnmarshallHandler.unmarshall(s, ProductType.class);
+        addProduct(type.payload);
         return null;
     }
 }

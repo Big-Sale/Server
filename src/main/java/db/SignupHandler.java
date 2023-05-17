@@ -8,7 +8,6 @@ import marshall.UnmarshallHandler;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 public class SignupHandler extends DBtask {
     private static boolean validateSignup(SignupUser user) {
@@ -67,7 +66,7 @@ public class SignupHandler extends DBtask {
         SignupType type = UnmarshallHandler.unmarshall(s, SignupType.class);
         SignupUser user = type.payload;
         String success;
-        if(signup(user)) {
+        if(signup(user) != -1) {
             success = "true";
         } else {
             success = "false";
