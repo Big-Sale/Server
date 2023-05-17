@@ -27,9 +27,21 @@ public class SubscriptionHandler {
 
     public static boolean hasNotification(int id) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
-             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM notification WHERE userid = ?")) {
+             PreparedStatement pstmt = con.prepareStatement("SELECT * FROM notifications WHERE userid = ?")) {
             pstmt.setInt(1, id);
             try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean hasPending(int id) {
+        try (Connection con = DataBaseConnection.getDatabaseConnection();
+        PreparedStatement stm = con.prepareStatement("SELECT * FROM pending_orders WHERE userid = ?")) {
+            stm.setInt(1, id);
+            try (ResultSet rs = stm.executeQuery()) {
                 return rs.next();
             }
         } catch (SQLException e) {

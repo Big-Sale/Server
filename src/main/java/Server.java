@@ -288,8 +288,8 @@ public class Server extends WebSocketServer {
             LoginType user = objectMapper.readValue(s, LoginType.class);
             int id = ValidateUser.validate(user.payload.username, user.payload.pw);
             if (id != -1) {
-
-                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
+                boolean notify = SubscriptionHandler.hasNotification(id) || SubscriptionHandler.hasPending(id);
+                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + ",\"notify\":" + notify + "}}");
                 OnlineUsers.put(id, webSocket);
             } else {
                 webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":-1}}");
