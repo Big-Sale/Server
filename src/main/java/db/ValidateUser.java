@@ -4,25 +4,17 @@ import java.sql.*;
 
 Lagpublic class ValidateUser extends DBtask {
     public static int validate(String username, String pw) {
-        Connection con = DataBaseConnection.getDatabaseConnection();
-        String query = "select pw, userid from users where username = ?;";
-        try {
-            PreparedStatement stm = con.prepareStatement(query);
+        try (Connection con = DataBaseConnection.getDatabaseConnection();
+             PreparedStatement stm = con.prepareStatement("SELECT pw, userid FROM users WHERE username = ?")) {
             stm.setString(1, username);
-            ResultSet rs = stm.executeQuery();
-            if (rs.next()) {
-                String dbPw = rs.getString("pw");
-                if (dbPw.equals(pw)) {
-                    int id = rs.getInt("userid");
-                    stm.close();
-                    rs.close();
-                    con.close();
-                    return id;
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    String dbPw = rs.getString("pw");
+                    if (dbPw.equals(pw)) {
+                        return rs.getInt("userid");
+                    }
                 }
             }
-            stm.close();
-            rs.close();
-            con.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
