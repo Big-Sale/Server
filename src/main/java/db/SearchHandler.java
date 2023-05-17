@@ -1,8 +1,12 @@
 package db;
 
-import beans.BuyProduct;
 import beans.Product;
 import beans.Search;
+import beans.SearchRequest;
+import beans.SearchType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import marshall.UnmarshallHandler;
 
 import java.sql.*;
 import java.util.LinkedList;
@@ -11,14 +15,16 @@ public class SearchHandler extends DBtask {
 
 
     @Override
-    public String doExecute(String s) {
-
-        /*unmarshal
-                prata med db
-                få tillbaka
-                        marshall
-                                return node;*/
-        return null;
+    public String doExecute(String s, String userID) {
+        SearchType searchType = UnmarshallHandler.unmarshall(s, SearchType.class);
+        SearchRequest buyProductRequest = new SearchRequest();
+        buyProductRequest.type = "search";
+        buyProductRequest.payload = search(searchType.payload);
+        try {
+            return new ObjectMapper().writeValueAsString(buyProductRequest);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Product[] search(Search parameters) {

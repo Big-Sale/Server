@@ -3,6 +3,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import db.*;
+import marshall.UnmarshallHandler;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -14,7 +15,7 @@ import java.util.LinkedList;
 
 public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
-    ProductHandler productHandler = new ProductHandler();
+    //ProductHandler productHandler = new ProductHandler();
 
     public Server() {
         super(new InetSocketAddress(8080));
@@ -139,7 +140,10 @@ public class Server extends WebSocketServer {
 
     private void addProduct(String json, WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
-        ObjectMapper objectMapper = new ObjectMapper();
+        AddProductHandler aph = new AddProductHandler();
+        int productID = Integer.parseInt(aph.execute(json, String.valueOf(id)));
+        checkNotifications();
+        /*ObjectMapper objectMapper = new ObjectMapper();
         try {
             ProductType product = objectMapper.readValue(json, ProductType.class);
             product.payload.seller = id;
@@ -148,7 +152,7 @@ public class Server extends WebSocketServer {
             checkNotifications(product.payload, productId);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
-        }
+        }*/
     }
 
     private void checkNotifications(Product product, int productId) {
@@ -274,7 +278,7 @@ public class Server extends WebSocketServer {
 
     private void addProduct(String s, int userID) {
         AddProductHandler aph = new AddProductHandler(userID);
-        aph.execute(s);
+        aph.execute(s, String.valueOf(userID));
     }
 
     @Override
@@ -286,40 +290,26 @@ public class Server extends WebSocketServer {
     }
 
 
-    private void login(String s, WebSocket webSocket) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            LoginType user = objectMapper.readValue(s, LoginType.class);
-            System.out.println(user.payload.username + " " + user.payload.pw);
-            int id = ValidateUser.validate(user.payload.username, user.payload.pw);
-            if (id != -1) {
+    private void login(String s, WebSocket webSocket) { //TODO kanske inte ska vara task kolla över hur man kan göra med ID
+        LoginType user = UnmarshallHandler.unmarshall(s, LoginType.class);
+        System.out.println(user.payload.username + " " + user.payload.pw);
+        int id = ValidateUser.validate(user.payload.username, user.payload.pw);
+        if (id != -1) {
 
-                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
-                OnlineUsers.put(id, webSocket);
-            } else {
-                webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":-1}}");
-            }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
+            OnlineUsers.put(id, webSocket);
+        } else {
+            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":-1}}");
         }
     }
 
     private void signup(String s, WebSocket webSocket) {
         SignupHandler sh = new SignupHandler();
-        String toReturn = sh.execute(s);
+        String toReturn = sh.execute(s, String.valueOf(OnlineUsers.get(webSocket)));
         webSocket.send(toReturn);
     }
 
     private void search(String s, WebSocket webSocket) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            SearchType search = objectMapper.readValue(s, SearchType.class);
-            SearchRequest buyProductRequest = new SearchRequest();
-            buyProductRequest.type = "search";
-            buyProductRequest.payload = searchHandler.search(search.payload);
-            webSocket.send(objectMapper.writeValueAsString(buyProductRequest));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        webSocket.send(searchHandler.execute(s, String.valueOf(OnlineUsers.get(webSocket))));
     }
 }

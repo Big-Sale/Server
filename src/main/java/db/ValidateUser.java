@@ -1,8 +1,11 @@
 package db;
 
+import beans.LoginType;
+import marshall.UnmarshallHandler;
+
 import java.sql.*;
 
-Lagpublic class ValidateUser extends DBtask {
+public class ValidateUser extends DBtask {
     public static int validate(String username, String pw) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = con.prepareStatement("SELECT pw, userid FROM users WHERE username = ?")) {
@@ -22,7 +25,16 @@ Lagpublic class ValidateUser extends DBtask {
     }
 
     @Override
-    public String doExecute(String s) {
-        return null;
+    public String doExecute(String s, String userID) {
+        LoginType user = UnmarshallHandler.unmarshall(s, LoginType.class);
+        int id = ValidateUser.validate(user.payload.username, user.payload.pw);
+        String toReturn;
+        if (id != -1) {
+
+            toReturn = "{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}";
+        } else {
+            toReturn = "{\"type\":\"login\",\"payload\":{\"id\":-1}}";
+        }
+        return toReturn;
     }
 }
