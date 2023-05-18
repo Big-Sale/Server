@@ -19,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
     ProductHandler productHandler = new ProductHandler();
+    PendingOrderHandler pendingOrderHandler = new PendingOrderHandler();
 
     public Server() {
         super(new InetSocketAddress(8080));
@@ -322,6 +323,16 @@ public class Server extends WebSocketServer {
             buyProductRequest.type = "search";
             buyProductRequest.payload = searchHandler.search(search.payload);
             webSocket.send(objectMapper.writeValueAsString(buyProductRequest));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private void getPendingOrdersPerUser(WebSocket webSocket){
+        ObjectMapper objectMapper = new ObjectMapper();
+        int id = OnlineUsers.get(webSocket);
+        try {
+            String jsonReturn = objectMapper.writeValueAsString(pendingOrderHandler.sellerPendingOrders(id));
+            webSocket.send(jsonReturn);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
