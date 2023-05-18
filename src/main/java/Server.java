@@ -108,7 +108,6 @@ public class Server extends WebSocketServer {
         String jsonProducts = bph.execute(json, id);
 
         PendingOrderHandler poh = new PendingOrderHandler();
-        //poh.execute(jsonProducts, id);
 
 
         Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
@@ -130,7 +129,7 @@ public class Server extends WebSocketServer {
         int id = OnlineUsers.get(webSocket);
         AddProductHandler aph = new AddProductHandler();
         String jsonProduct = aph.execute(json, id);
-        checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class), -1); //TODO ändra efter merge
+        checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class));
     }
 
     private void checkNotifications(Product product) {
