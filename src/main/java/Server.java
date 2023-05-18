@@ -11,7 +11,11 @@ import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 
 public class Server extends WebSocketServer {
@@ -76,15 +80,11 @@ public class Server extends WebSocketServer {
 
     private void subscribe(String payload, WebSocket webSocket) {
         int userId = OnlineUsers.get(webSocket);
-        Connection conn = DataBaseConnection.getDatabaseConnection();
-        String query = "insert into subscriptions values (?, ?);";
-        try {
-            PreparedStatement stm = conn.prepareStatement(query);
+        try (Connection con = DataBaseConnection.getDatabaseConnection();
+             PreparedStatement stm = con.prepareStatement("INSERT INTO subscriptions VALUES (?, ?)")) {
             stm.setInt(1, userId);
             stm.setString(2, payload);
             stm.executeUpdate();
-            stm.close();
-            conn.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -92,15 +92,11 @@ public class Server extends WebSocketServer {
 
     private void removeNotification(int productId, WebSocket webSocket) {
         int userId = OnlineUsers.get(webSocket);
-        Connection conn = DataBaseConnection.getDatabaseConnection();
-        String query = "delete from notifications where userid = ? and productid = ?;";
-        try {
-            PreparedStatement stm = conn.prepareStatement(query);
+        try (Connection con = DataBaseConnection.getDatabaseConnection();
+             PreparedStatement stm = con.prepareStatement("DELETE FROM notifications WHERE userid = ? AND productid = ?")) {
             stm.setInt(1, userId);
             stm.setInt(2, productId);
             stm.executeUpdate();
-            stm.close();
-            conn.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -137,7 +133,7 @@ public class Server extends WebSocketServer {
         checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class), -1); //TODO ändra efter merge
     }
 
-    private void checkNotifications(Product product, int productId) {
+    private void checkNotifications(Product product) {
         LinkedList<Integer> userIds = new LinkedList<>();
         try {
             Connection conn = db.DataBaseConnection.getDatabaseConnection();
@@ -165,7 +161,7 @@ public class Server extends WebSocketServer {
             String q = "call add_notification(?, ?);";
             PreparedStatement st = conn.prepareStatement(q);
             st.setArray(1, conn.createArrayOf("integer", userIds.toArray()));
-            st.setInt(2, productId);
+            st.setInt(2, product.productId);
             st.execute();
             st.close();
             conn.close();
@@ -197,6 +193,9 @@ public class Server extends WebSocketServer {
                 product.yearOfProduction = rs.getString(9);
                 list.add(product);
             }
+            rs.close();
+            stm.close();
+            connection.close();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -204,7 +203,8 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         ReturnProductType returnProductType = new ReturnProductType();
         returnProductType.type = "notifications";
-        returnProductType.payload = list.toArray(new Product[0]);;
+        returnProductType.payload = list.toArray(new Product[0]);
+        ;
         try {
             String json = objectMapper.writeValueAsString(returnProductType);
             webSocket.send(json);
