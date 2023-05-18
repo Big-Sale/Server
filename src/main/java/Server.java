@@ -282,8 +282,12 @@ public class Server extends WebSocketServer {
 
     private void signup(String s, WebSocket webSocket) {
         SignupHandler sh = new SignupHandler();
-        String toReturn = sh.execute(s,OnlineUsers.get(webSocket));
-        webSocket.send(toReturn);
+        String stringID = sh.execute(s,-1);
+        int id = Integer.parseInt(stringID);
+        if (id != -1) {
+            OnlineUsers.put(id, webSocket);
+        }
+        webSocket.send("{\"type\":\"signup\",\"payload\":{\"id\":" + id + "}}");
     }
 
     private void search(String s, WebSocket webSocket) {

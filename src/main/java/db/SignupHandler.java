@@ -50,12 +50,8 @@ public class SignupHandler extends DBtask {
         SignupType type = UnmarshallHandler.unmarshall(s, SignupType.class);
         SignupUser user = type.payload;
         String success;
-        if(signup(user) != -1) {
-            success = "true";
-        } else {
-            success = "false";
-        }
-        return "{\"type\":\"signup\",\"payload\":{\"success\":" + success + "}}";
+        int id = signup(user);
+        return String.valueOf(id);
     }
 
 }
