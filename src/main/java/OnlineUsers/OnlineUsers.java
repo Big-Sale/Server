@@ -1,3 +1,5 @@
+package OnlineUsers;
+
 import org.java_websocket.WebSocket;
 
 import java.util.HashMap;

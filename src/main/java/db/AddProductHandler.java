@@ -1,6 +1,8 @@
 package db;
 
 import beans.ProductType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import marshall.UnmarshallHandler;
 import beans.Product;
 
@@ -11,19 +13,9 @@ import java.sql.*;
 
 public class AddProductHandler extends DBtask {
 
-     public void buyProduct(int userID, Integer[] products) {
-          try (Connection con = DataBaseConnection.getDatabaseConnection();
-          PreparedStatement stm = con.prepareStatement("CALL insert_into_pending_orders(?, ?)")) {
-               Array productArray = con.createArrayOf("integer", products);
-               stm.setInt(1, userID);
-               stm.setArray(2, productArray);
-               stm.execute();
-          } catch (SQLException e) {
-               throw new RuntimeException(e);
-          }
-     }
 
-     public static int addProduct(Product product) {
+
+     private int addProduct(Product product) {
           Connection connection = DataBaseConnection.getDatabaseConnection();
           String query = "select insert_product(?, ?, ?, ?, ?, ?, ?, ?)";
           try {
@@ -50,14 +42,23 @@ public class AddProductHandler extends DBtask {
           }
      }
 
+    /**
+     * @param s json object
+     * @param userID
+     * @return product object as json string
+     */
     @Override
-    public String doExecute(String s, String userID) {
+    public String doExecute(String s, int userID) {
         ProductType product = UnmarshallHandler.unmarshall(s, ProductType.class);
-        product.payload.seller = Integer.parseInt(userID);
+        product.payload.seller = userID;
         product.payload.status = "available";
-        String productID = String.valueOf(addProduct(product.payload));
-        product.payload.productId = productID;
+        product.payload.productId = addProduct(product.payload);
 
-        return productID; //todo strängsplitta?
+        try {
+            return new ObjectMapper().writeValueAsString(product.payload);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

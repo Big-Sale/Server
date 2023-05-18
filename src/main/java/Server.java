@@ -1,3 +1,4 @@
+import OnlineUsers.OnlineUsers;
 import beans.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -106,53 +107,34 @@ public class Server extends WebSocketServer {
     }
 
     private void buyProduct(String json, WebSocket webSocket) {
+        BuyProductHandler bph = new BuyProductHandler();
         int id = OnlineUsers.get(webSocket);
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            BuyProductType product = objectMapper.readValue(json, BuyProductType.class);
-            Integer[] products = product.payload;
-            productHandler.buyProduct(id, products);
-            for (Integer i : products) {
-                Connection connection = DataBaseConnection.getDatabaseConnection();
-                String query = "SELECT seller FROM products WHERE productid = ?";
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setInt(1, i);
-                ResultSet rs = preparedStatement.executeQuery();
-                if (rs.next()) {
-                    int seller = rs.getInt("seller");
-                    if (OnlineUsers.contains(seller)){
-                        NotificationType notificationType = new NotificationType();
-                        notificationType.type = "pending_order_notification";
-                        OnlineUsers.get(seller).send(objectMapper.writeValueAsString(notificationType));
-                    }
+        String jsonProducts = bph.execute(json, id);
+
+        PendingOrderHandler poh = new PendingOrderHandler();
+        //poh.execute(jsonProducts, id);
+
+
+        Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
+        for (Integer i : products) {
+            int seller = Integer.parseInt(poh.execute(String.valueOf(i), id));
+            if (OnlineUsers.contains(seller)){
+                NotificationType notificationType = new NotificationType();
+                notificationType.type = "pending_order_notification";
+                try {
+                    OnlineUsers.get(seller).send(new ObjectMapper().writeValueAsString(notificationType));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
                 }
-                rs.close();
-                preparedStatement.close();
-                connection.close();
             }
-        } catch (JsonProcessingException e ){
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
         }
     }
 
     private void addProduct(String json, WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
         AddProductHandler aph = new AddProductHandler();
-        int productID = Integer.parseInt(aph.execute(json, String.valueOf(id)));
-        checkNotifications();
-        /*ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            ProductType product = objectMapper.readValue(json, ProductType.class);
-            product.payload.seller = id;
-            product.payload.status = "available";
-            int productId = ProductHandler.addProduct(product.payload);
-            checkNotifications(product.payload, productId);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }*/
+        String jsonProduct = aph.execute(json, id);
+        checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class), -1); //TODO ändra efter merge
     }
 
     private void checkNotifications(Product product, int productId) {
@@ -276,11 +258,6 @@ public class Server extends WebSocketServer {
 
     }
 
-    private void addProduct(String s, int userID) {
-        AddProductHandler aph = new AddProductHandler(userID);
-        aph.execute(s, String.valueOf(userID));
-    }
-
     @Override
     public void onError(WebSocket webSocket, Exception e) {
         System.out.println("Error from " + webSocket.getRemoteSocketAddress());
@@ -305,11 +282,11 @@ public class Server extends WebSocketServer {
 
     private void signup(String s, WebSocket webSocket) {
         SignupHandler sh = new SignupHandler();
-        String toReturn = sh.execute(s, String.valueOf(OnlineUsers.get(webSocket)));
+        String toReturn = sh.execute(s,OnlineUsers.get(webSocket));
         webSocket.send(toReturn);
     }
 
     private void search(String s, WebSocket webSocket) {
-        webSocket.send(searchHandler.execute(s, String.valueOf(OnlineUsers.get(webSocket))));
+        webSocket.send(searchHandler.execute(s, OnlineUsers.get(webSocket)));
     }
 }
