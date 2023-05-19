@@ -16,7 +16,7 @@ import java.util.LinkedList;
 
 public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
-    //ProductHandler productHandler = new ProductHandler();
+    PendingOrderHandler pendingOrderHandler = new PendingOrderHandler();
 
     public Server() {
         super(new InetSocketAddress(8080));
@@ -66,6 +66,7 @@ public class Server extends WebSocketServer {
             case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
             case "notificationCheck" -> notificationCheck(webSocket);
             case "acceptOrder" -> acceptOrder(json, webSocket);
+            case "pendingOrderRequest" -> getPendingOrdersPerUser(webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
@@ -294,5 +295,15 @@ public class Server extends WebSocketServer {
 
     private void search(String s, WebSocket webSocket) {
         webSocket.send(searchHandler.execute(s, OnlineUsers.get(webSocket)));
+    }
+    private void getPendingOrdersPerUser(WebSocket webSocket){
+        ObjectMapper objectMapper = new ObjectMapper();
+        int id = OnlineUsers.get(webSocket);
+        try {
+            String jsonReturn = objectMapper.writeValueAsString(pendingOrderHandler.sellerPendingOrders(id));
+            webSocket.send(jsonReturn);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
