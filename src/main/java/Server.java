@@ -11,13 +11,11 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
-import java.sql.*;
 import java.util.LinkedList;
 
 
 public class Server extends WebSocketServer {
-    SearchHandler searchHandler = new SearchHandler();
-    PendingOrderHandler pendingOrderHandler = new PendingOrderHandler();
+    PendingOrderTask pendingOrderTask = new PendingOrderTask();
     SearchTask searchTask = new SearchTask();
 
     public Server() {
@@ -108,12 +106,11 @@ public class Server extends WebSocketServer {
         int id = OnlineUsers.get(webSocket);
         String jsonProducts = bph.execute(json, id);
 
-        PendingOrderHandler poh = new PendingOrderHandler(); //todo gör findsellertask
-
+        FindSellerTask fst = new FindSellerTask();
 
         Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
         for (Integer i : products) {
-            int seller = Integer.parseInt(poh.execute(String.valueOf(i), id));
+            int seller = Integer.parseInt(fst.execute(String.valueOf(i), id));
             if (OnlineUsers.contains(seller)){
                 NotificationType notificationType = new NotificationType();
                 notificationType.type = "pending_order_notification";
@@ -133,7 +130,7 @@ public class Server extends WebSocketServer {
         checkNotifications(jsonProduct);
     }
 
-    private void checkNotifications(String jsonProduct) { //TODO fortsätt här
+    private void checkNotifications(String jsonProduct) {
         CheckNotificationTask cnt = new CheckNotificationTask();
         String jsonList = cnt.execute(jsonProduct, -1);
         LinkedList<Integer> userIDs = UnmarshallHandler.unmarshall(jsonList, LinkedList.class);
@@ -201,7 +198,7 @@ public class Server extends WebSocketServer {
     }
     private void getPendingOrdersPerUser(String json, WebSocket webSocket){
         int id = OnlineUsers.get(webSocket);
-        String jsonReturn = pendingOrderHandler.doExecute(json, id);
+        String jsonReturn = pendingOrderTask.doExecute(json, id);
         webSocket.send(jsonReturn);
     }
 }
