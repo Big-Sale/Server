@@ -1,6 +1,6 @@
 package db;
 
-public class LoginHandler extends DBtask {
+public class LoginTask extends DBtask {
 
 
     @Override

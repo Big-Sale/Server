@@ -11,7 +11,7 @@ import marshall.UnmarshallHandler;
 import java.sql.*;
 import java.util.LinkedList;
 
-public class SearchHandler extends DBtask {
+public class SearchTask extends DBtask {
 
 
     @Override

@@ -10,7 +10,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class BuyProductHandler extends DBtask {
+public class BuyProductTask extends DBtask {
     @Override
     public String doExecute(String s, int userID) {
         BuyProductType productType = UnmarshallHandler.unmarshall(s, BuyProductType.class);

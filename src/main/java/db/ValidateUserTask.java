@@ -5,7 +5,7 @@ import marshall.UnmarshallHandler;
 
 import java.sql.*;
 
-public class ValidateUser extends DBtask {
+public class ValidateUserTask extends DBtask {
     public static int validate(String username, String pw) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = con.prepareStatement("SELECT pw, userid FROM users WHERE username = ?")) {
@@ -27,7 +27,7 @@ public class ValidateUser extends DBtask {
     @Override
     public String doExecute(String s, int userID) {
         LoginType user = UnmarshallHandler.unmarshall(s, LoginType.class);
-        int id = ValidateUser.validate(user.payload.username, user.payload.pw);
+        int id = ValidateUserTask.validate(user.payload.username, user.payload.pw);
         String toReturn;
         if (id != -1) {
 
