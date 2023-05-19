@@ -70,7 +70,7 @@ public class Server extends WebSocketServer {
             case "notificationCheck" -> notificationCheck(webSocket);
             case "acceptProductSale" -> acceptOrder(json, webSocket);
             case "denyProductSale" -> denyOrder(json, webSocket);
-            case "pendingOrderRequest" -> getPendingOrdersPerUser(webSocket);
+            case "pendingOrderRequest" -> getPendingOrdersPerUser(json, webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
