@@ -20,6 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 
 public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
+    ProductHandler productHandler = new ProductHandler();
+    PendingOrderHandler pendingOrderHandler = new PendingOrderHandler();
     //ProductHandler productHandler = new ProductHandler();
 
     public Server() {
@@ -69,6 +71,7 @@ public class Server extends WebSocketServer {
             case "removeNotification" -> removeNotification(rootNode.get("payload").asInt(), webSocket);
             case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
             case "notificationCheck" -> notificationCheck(webSocket);
+            case "pendingOrderRequest" -> getPendingOrdersPerUser(webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
@@ -291,5 +294,15 @@ public class Server extends WebSocketServer {
 
     private void search(String s, WebSocket webSocket) {
         webSocket.send(searchHandler.execute(s, OnlineUsers.get(webSocket)));
+    }
+    private void getPendingOrdersPerUser(WebSocket webSocket){
+        ObjectMapper objectMapper = new ObjectMapper();
+        int id = OnlineUsers.get(webSocket);
+        try {
+            String jsonReturn = objectMapper.writeValueAsString(pendingOrderHandler.sellerPendingOrders(id));
+            webSocket.send(jsonReturn);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
