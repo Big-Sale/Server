@@ -121,7 +121,7 @@ public class Server extends WebSocketServer {
         checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class));
     }
 
-    private void checkNotifications(Product product) {
+    private void checkNotifications(Product product) { //TODO fortsätt här
         LinkedList<Integer> userIds = new LinkedList<>();
         try {
             Connection conn = db.DataBaseConnection.getDatabaseConnection();
@@ -162,47 +162,12 @@ public class Server extends WebSocketServer {
 
     private void notifications(WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
-        LinkedList<Product> list = new LinkedList<>();
-        try {
-            Connection connection = db.DataBaseConnection.getDatabaseConnection();
-            String query = "select * from get_notifications(?);";
-            PreparedStatement stm = connection.prepareStatement(query);
-            stm.setInt(1, id);
-            ResultSet rs = stm.executeQuery();
-            while (rs.next()) {
-                Product product = new Product();
-                product.productId = rs.getInt(1);
-                product.productType = rs.getString(2);
-                product.price = rs.getFloat(3);
-                product.colour = rs.getString(4);
-                product.condition = rs.getString(5);
-                product.productName = rs.getString(7);
-                product.seller = rs.getInt(8);
-                product.yearOfProduction = rs.getString(9);
-                list.add(product);
-            }
-            rs.close();
-            stm.close();
-            connection.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        ReturnProductType returnProductType = new ReturnProductType();
-        returnProductType.type = "notifications";
-        returnProductType.payload = list.toArray(new Product[0]);
-        ;
-        try {
-            String json = objectMapper.writeValueAsString(returnProductType);
-            webSocket.send(json);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        FetchNotificationTask fnt = new FetchNotificationTask();
+        webSocket.send(fnt.execute(null, id));
         //TODO: Query somr retunerar alla produkter som id premunurerar på (och flytta till r'tt handler)
+        //TODO är ovanstående todo aktuell????
     }
 
-    //TODO FLYTTA TILL KORREKT HANDLER
     private void orderHistory(String json, WebSocket webSocket) {
         OrderHistoryTask oht = new OrderHistoryTask();
         webSocket.send(oht.execute(json, OnlineUsers.get(webSocket)));
