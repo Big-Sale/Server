@@ -69,7 +69,7 @@ public class Server extends WebSocketServer {
             case "removeNotification" -> removeNotification(rootNode.get("payload").asInt(), webSocket);
             case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
             case "notificationCheck" -> notificationCheck(webSocket);
-            case "pendingOrderRequest" -> getPendingOrdersPerUser(webSocket);
+            case "pendingOrderRequest" -> getPendingOrdersPerUser(json, webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
@@ -293,14 +293,9 @@ public class Server extends WebSocketServer {
     private void search(String s, WebSocket webSocket) {
         webSocket.send(searchHandler.execute(s, OnlineUsers.get(webSocket)));
     }
-    private void getPendingOrdersPerUser(WebSocket webSocket){
-        ObjectMapper objectMapper = new ObjectMapper();
+    private void getPendingOrdersPerUser(String json, WebSocket webSocket){
         int id = OnlineUsers.get(webSocket);
-        try {
-            String jsonReturn = objectMapper.writeValueAsString(pendingOrderHandler.sellerPendingOrders(id));
-            webSocket.send(jsonReturn);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        String jsonReturn = pendingOrderHandler.doExecute(json, id);
+        webSocket.send(jsonReturn);
     }
 }
