@@ -20,9 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class Server extends WebSocketServer {
     SearchHandler searchHandler = new SearchHandler();
-    ProductHandler productHandler = new ProductHandler();
     PendingOrderHandler pendingOrderHandler = new PendingOrderHandler();
-    //ProductHandler productHandler = new ProductHandler();
 
     public Server() {
         super(new InetSocketAddress(8080));

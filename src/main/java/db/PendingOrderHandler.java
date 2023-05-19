@@ -2,6 +2,7 @@ package db;
 
 import OnlineUsers.OnlineUsers;
 import beans.NotificationType;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import marshall.UnmarshallHandler;
 import beans.PendingOrder;
@@ -12,11 +13,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
 
 public class PendingOrderHandler extends DBtask {
     @Override
-    public String doExecute(String s, int userID) {
-        return findSeller(Integer.parseInt(s));
+    public String doExecute(String s, int userID)  {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonReturn = null;
+        try {
+            jsonReturn = objectMapper.writeValueAsString(sellerPendingOrders(userID));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return jsonReturn;
+
     }
 
     private String findSeller(int productID) {
@@ -37,10 +47,6 @@ public class PendingOrderHandler extends DBtask {
 
         return String.valueOf(seller);
     }
-import java.util.LinkedList;
-
-public class PendingOrderHandler {
-
     public PendingOrderType sellerPendingOrders(int userID) {
         LinkedList<PendingOrder> pendingOrders = new LinkedList<>();
          try (Connection con = DataBaseConnection.getDatabaseConnection();
