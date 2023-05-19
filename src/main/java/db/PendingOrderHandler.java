@@ -2,6 +2,7 @@ package db;
 
 import beans.PendingOrder;
 import beans.PendingOrderType;
+import beans.Product;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,8 +20,9 @@ public class PendingOrderHandler {
              ResultSet rs = stm.executeQuery();
              while (rs.next()){
                  PendingOrder pendingOrder = new PendingOrder();
-                 pendingOrder.userID = rs.getInt(1);
-                 pendingOrder.username = rs.getString(2);
+                 pendingOrder.product = new Product();
+                 pendingOrder.buyerId = rs.getInt(1);
+                 pendingOrder.buyer = rs.getString(2);
                  pendingOrder.product.productId = rs.getInt(3);
                  pendingOrder.product.productType = rs.getString(4);
                  pendingOrder.product.price = rs.getFloat(5);
@@ -35,7 +37,7 @@ public class PendingOrderHandler {
             throw new RuntimeException(e);
         }
         PendingOrderType pot = new PendingOrderType();
-        pot.type = "pending_order_list";
+        pot.type = "pending_orders";
         pot.payload = pendingOrders.toArray(new PendingOrder[0]);
         return pot;
     }
