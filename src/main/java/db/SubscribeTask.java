@@ -5,9 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SubscriptionHandler {
+public class SubscribeTask extends DBtask {
 
-
+    //TODO behöver vi dessa?
     public static void alert(String productName) {
         Connection connection = DataBaseConnection.getDatabaseConnection();
         String query = "select userid from subscription where productname = ?";
@@ -49,4 +49,20 @@ public class SubscriptionHandler {
         }
     }
 
+    @Override
+    public String doExecute(String s, int userID) {
+        subscribe(s, userID);
+        return null;
+    }
+
+    private void subscribe(String s, int userID) {
+        try (Connection con = DataBaseConnection.getDatabaseConnection();
+             PreparedStatement stm = con.prepareStatement("INSERT INTO subscriptions VALUES (?, ?)")) {
+            stm.setInt(1, userID);
+            stm.setString(2, s);
+            stm.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.*;
 
-public class AddProductHandler extends DBtask {
+public class AddProductTask extends DBtask {
 
 
 

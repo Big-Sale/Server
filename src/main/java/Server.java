@@ -11,16 +11,11 @@ import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
 import java.sql.*;
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 
 public class Server extends WebSocketServer {
-    SearchHandler searchHandler = new SearchHandler();
-    //ProductHandler productHandler = new ProductHandler();
+    SearchTask searchTask = new SearchTask();
 
     public Server() {
         super(new InetSocketAddress(8080));
@@ -32,7 +27,7 @@ public class Server extends WebSocketServer {
         ObjectMapper objectMapper = new ObjectMapper();
         ReturnProductType returnProductType = new ReturnProductType();
         returnProductType.type = "randomProducts";
-        returnProductType.payload = SearchHandler.getRandomProducts();
+        returnProductType.payload = SearchTask.getRandomProducts();
         try {
             String json = objectMapper.writeValueAsString(returnProductType);
             webSocket.send(json);
@@ -80,14 +75,8 @@ public class Server extends WebSocketServer {
 
     private void subscribe(String payload, WebSocket webSocket) {
         int userId = OnlineUsers.get(webSocket);
-        try (Connection con = DataBaseConnection.getDatabaseConnection();
-             PreparedStatement stm = con.prepareStatement("INSERT INTO subscriptions VALUES (?, ?)")) {
-            stm.setInt(1, userId);
-            stm.setString(2, payload);
-            stm.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        SubscribeTask st = new SubscribeTask();
+        st.execute(payload, userId);
     }
 
     private void removeNotification(int productId, WebSocket webSocket) {
@@ -103,11 +92,11 @@ public class Server extends WebSocketServer {
     }
 
     private void buyProduct(String json, WebSocket webSocket) {
-        BuyProductHandler bph = new BuyProductHandler();
+        BuyProductTask bph = new BuyProductTask();
         int id = OnlineUsers.get(webSocket);
         String jsonProducts = bph.execute(json, id);
 
-        PendingOrderHandler poh = new PendingOrderHandler();
+        FindSellerTask poh = new FindSellerTask();
 
 
         Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
@@ -127,7 +116,7 @@ public class Server extends WebSocketServer {
 
     private void addProduct(String json, WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
-        AddProductHandler aph = new AddProductHandler();
+        AddProductTask aph = new AddProductTask();
         String jsonProduct = aph.execute(json, id);
         checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class));
     }
@@ -215,45 +204,8 @@ public class Server extends WebSocketServer {
 
     //TODO FLYTTA TILL KORREKT HANDLER
     private void orderHistory(String json, WebSocket webSocket) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        LinkedList<OrderHistoryProduct> list = new LinkedList<>();
-        OrderHistoryRequestType ohrt = null;
-        try {
-            ohrt = objectMapper.readValue(json, OrderHistoryRequestType.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        try (Connection connection = db.DataBaseConnection.getDatabaseConnection();
-             PreparedStatement stm = connection.prepareStatement("SELECT * FROM get_order_history(?, ?)")) {
-
-            stm.setInt(1, ohrt.payload.userId);
-            stm.setDate(2, Date.valueOf(ohrt.payload.date));
-
-            try (ResultSet rs = stm.executeQuery()) {
-                while (rs.next()) {
-                    OrderHistoryProduct ohp = new OrderHistoryProduct();
-                    ohp.productId = rs.getInt(1);
-                    ohp.productType = rs.getString(2);
-                    ohp.price = rs.getFloat(3);
-                    ohp.colour = rs.getString(4);
-                    ohp.condition = rs.getString(5);
-                    ohp.productName = rs.getString(6);
-                    ohp.seller = rs.getInt(7);
-                    ohp.yearOfProduction = rs.getString(8);
-                    ohp.dateOfPurchase = rs.getDate(9);
-                    list.add(ohp);
-                }
-            }
-
-            OrderHistoryType oht = new OrderHistoryType();
-            oht.type = "order_history_request";
-            oht.payload = list.toArray(new OrderHistoryProduct[0]);
-            String jsonReturn = objectMapper.writeValueAsString(oht);
-            webSocket.send(jsonReturn);
-
-        } catch (JsonProcessingException | SQLException e) {
-            throw new RuntimeException(e);
-        }
+        OrderHistoryTask oht = new OrderHistoryTask();
+        webSocket.send(oht.execute(json, OnlineUsers.get(webSocket)));
 
     }
 
@@ -267,20 +219,13 @@ public class Server extends WebSocketServer {
 
 
     private void login(String s, WebSocket webSocket) { //TODO kanske inte ska vara task kolla över hur man kan göra med ID
-        LoginType user = UnmarshallHandler.unmarshall(s, LoginType.class);
-        System.out.println(user.payload.username + " " + user.payload.pw);
-        int id = ValidateUser.validate(user.payload.username, user.payload.pw);
-        if (id != -1) {
-
-            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
-            OnlineUsers.put(id, webSocket);
-        } else {
-            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":-1}}");
-        }
+        LoginTask lt = new LoginTask();
+        String toReturn = lt.execute(s, OnlineUsers.get(webSocket));
+        webSocket.send(toReturn);
     }
 
     private void signup(String s, WebSocket webSocket) {
-        SignupHandler sh = new SignupHandler();
+        SignupTask sh = new SignupTask();
         String stringID = sh.execute(s,-1);
         int id = Integer.parseInt(stringID);
         if (id != -1) {
@@ -290,6 +235,6 @@ public class Server extends WebSocketServer {
     }
 
     private void search(String s, WebSocket webSocket) {
-        webSocket.send(searchHandler.execute(s, OnlineUsers.get(webSocket)));
+        webSocket.send(searchTask.execute(s, OnlineUsers.get(webSocket)));
     }
 }

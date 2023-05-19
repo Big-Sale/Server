@@ -1,16 +1,11 @@
 package db;
 
-import OnlineUsers.OnlineUsers;
-import beans.NotificationType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import marshall.UnmarshallHandler;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PendingOrderHandler extends DBtask {
+public class FindSellerTask extends DBtask {
     @Override
     public String doExecute(String s, int userID) {
         return findSeller(Integer.parseInt(s));
