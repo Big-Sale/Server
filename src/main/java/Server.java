@@ -11,11 +11,7 @@ import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
 import java.sql.*;
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 
 public class Server extends WebSocketServer {
@@ -69,9 +65,16 @@ public class Server extends WebSocketServer {
             case "removeNotification" -> removeNotification(rootNode.get("payload").asInt(), webSocket);
             case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
             case "notificationCheck" -> notificationCheck(webSocket);
+            case "acceptOrder" -> acceptOrder(json, webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
 
+    }
+
+    private void acceptOrder(String json, WebSocket webSocket) {
+        int id = OnlineUsers.get(webSocket);
+        AcceptOrderTask acceptOrderTask = new AcceptOrderTask();
+        acceptOrderTask.execute(json, id);
     }
 
     private void notificationCheck(WebSocket webSocket) {
