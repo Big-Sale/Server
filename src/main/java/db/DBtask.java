@@ -1,9 +1,11 @@
 package db;
 
+import logger.Logger;
+
 public abstract class DBtask {
 
     public String execute(String payload, int userID) {
-        DBlogger.dbLog(payload, userID); //TODO ändra
+        Logger.dbLog(payload, userID); //TODO ändra
         return doExecute(payload, userID);
 
     }

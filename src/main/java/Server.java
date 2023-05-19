@@ -4,13 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import db.*;
+import logger.Logger;
 import marshall.UnmarshallHandler;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
-import java.sql.*;
 import java.util.LinkedList;
 
 
@@ -23,7 +23,7 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket webSocket, ClientHandshake clientHandshake) {
-        System.out.println("New connection from " + webSocket.getRemoteSocketAddress());
+        Logger.connectLog(webSocket.getRemoteSocketAddress().toString());
         ObjectMapper objectMapper = new ObjectMapper();
         ReturnProductType returnProductType = new ReturnProductType();
         returnProductType.type = "randomProducts";
@@ -38,13 +38,13 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket webSocket, int i, String s, boolean b) {
-        System.out.println("Closed connection to " + webSocket.getRemoteSocketAddress());
+        Logger.disconnectLog(webSocket.getRemoteSocketAddress().toString());
         OnlineUsers.remove(webSocket);
     }
 
     @Override
     public void onMessage(WebSocket webSocket, String json) {
-        System.out.println("Message from " + webSocket.getRemoteSocketAddress() + ": " + json);
+        Logger.messageLog(webSocket.getRemoteSocketAddress().toString());
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode rootNode = null;
         try {
@@ -61,7 +61,7 @@ public class Server extends WebSocketServer {
             case "addProduct" -> addProduct(json, webSocket);
             case "OrderHistoryRequest" -> orderHistory(json, webSocket);
             case "buyProduct" -> buyProduct(json, webSocket);
-            case "removeNotification" -> removeNotification(rootNode.get("payload").asInt(), webSocket);
+            case "removeNotification" -> removeNotification(rootNode.get("payload").asText(), webSocket);
             case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
             case "notificationCheck" -> notificationCheck(webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
@@ -79,16 +79,10 @@ public class Server extends WebSocketServer {
         st.execute(payload, userId);
     }
 
-    private void removeNotification(int productId, WebSocket webSocket) {
+    private void removeNotification(String productId, WebSocket webSocket) {
         int userId = OnlineUsers.get(webSocket);
-        try (Connection con = DataBaseConnection.getDatabaseConnection();
-             PreparedStatement stm = con.prepareStatement("DELETE FROM notifications WHERE userid = ? AND productid = ?")) {
-            stm.setInt(1, userId);
-            stm.setInt(2, productId);
-            stm.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        RemoveNotificationTask rnt = new RemoveNotificationTask();
+        rnt.execute(productId, userId);
     }
 
     private void buyProduct(String json, WebSocket webSocket) {
@@ -118,45 +112,31 @@ public class Server extends WebSocketServer {
         int id = OnlineUsers.get(webSocket);
         AddProductTask aph = new AddProductTask();
         String jsonProduct = aph.execute(json, id);
-        checkNotifications(UnmarshallHandler.unmarshall(jsonProduct, Product.class));
+        checkNotifications(jsonProduct);
     }
 
-    private void checkNotifications(Product product) { //TODO fortsätt här
-        LinkedList<Integer> userIds = new LinkedList<>();
-        try {
-            Connection conn = db.DataBaseConnection.getDatabaseConnection();
-            String query = "select userid from subscriptions where productname = ?;";
-            PreparedStatement stm = conn.prepareStatement(query);
-            stm.setString(1, product.productType);
-            ResultSet rs = stm.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt(1);
-                if (OnlineUsers.contains(id)) {
-                    WebSocket webSocket = OnlineUsers.get(id);
-                    if (webSocket != null && id != product.seller) {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        NotificationType notificationType = new NotificationType();
-                        notificationType.type = "subscribed_product";
-                        notificationType.payload = product;
-                        String json = objectMapper.writeValueAsString(notificationType);
-                        webSocket.send(json);
+    private void checkNotifications(String jsonProduct) { //TODO fortsätt här
+        CheckNotificationTask cnt = new CheckNotificationTask();
+        String jsonList = cnt.execute(jsonProduct, -1);
+        LinkedList<Integer> userIDs = UnmarshallHandler.unmarshall(jsonList, LinkedList.class);
+        Product product = UnmarshallHandler.unmarshall(jsonProduct, Product.class);
+        for(Integer userID : userIDs) {
+            if (OnlineUsers.contains(userID)) {
+                WebSocket webSocket = OnlineUsers.get(userID);
+                if (webSocket != null && userID != product.seller) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    NotificationType notificationType = new NotificationType();
+                    notificationType.type = "subscribed_product";
+                    notificationType.payload = product;
+                    String json = null;
+                    try {
+                        json = objectMapper.writeValueAsString(notificationType);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
                     }
+                    webSocket.send(json);
                 }
-                userIds.add(id);
             }
-            rs.close();
-            stm.close();
-            String q = "call add_notification(?, ?);";
-            PreparedStatement st = conn.prepareStatement(q);
-            st.setArray(1, conn.createArrayOf("integer", userIds.toArray()));
-            st.setInt(2, product.productId);
-            st.execute();
-            st.close();
-            conn.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -176,8 +156,7 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onError(WebSocket webSocket, Exception e) {
-        System.out.println("Error from " + webSocket.getRemoteSocketAddress());
-        e.printStackTrace();
+        Logger.errorLog(webSocket.getRemoteSocketAddress().toString(), e);
         OnlineUsers.remove(webSocket);
         webSocket.close();
     }
