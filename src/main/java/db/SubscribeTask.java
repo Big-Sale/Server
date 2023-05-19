@@ -50,7 +50,7 @@ public class SubscribeTask extends DBtask {
     }
 
     @Override
-    public String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userID) {
         subscribe(s, userID);
         return null;
     }

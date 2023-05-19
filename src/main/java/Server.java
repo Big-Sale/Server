@@ -198,7 +198,7 @@ public class Server extends WebSocketServer {
     }
     private void getPendingOrdersPerUser(String json, WebSocket webSocket){
         int id = OnlineUsers.get(webSocket);
-        String jsonReturn = pendingOrderTask.doExecute(json, id);
+        String jsonReturn = pendingOrderTask.execute(json, id);
         webSocket.send(jsonReturn);
     }
 }

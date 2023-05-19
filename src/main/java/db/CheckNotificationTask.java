@@ -13,7 +13,7 @@ import java.util.LinkedList;
 
 public class CheckNotificationTask extends DBtask {
     @Override
-    public String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userID) {
         Product product = UnmarshallHandler.unmarshall(s, Product.class);
         LinkedList<Integer> userIDs = getSubscUserIDs(product);
         addNotifications(product, userIDs);

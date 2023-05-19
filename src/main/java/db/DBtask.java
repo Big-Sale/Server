@@ -10,6 +10,6 @@ public abstract class DBtask {
 
     }
 
-    public abstract String doExecute(String s, int userID);
+    protected abstract String doExecute(String s, int userID);
 
 }

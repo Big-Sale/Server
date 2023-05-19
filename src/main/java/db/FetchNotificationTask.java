@@ -16,7 +16,7 @@ import java.util.LinkedList;
  */
 public class FetchNotificationTask extends DBtask {
     @Override
-    public String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userID) {
 
         LinkedList<Product> list = fetchNotifications(userID);
         ReturnProductType returnProductType = new ReturnProductType();

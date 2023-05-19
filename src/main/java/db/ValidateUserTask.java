@@ -25,7 +25,7 @@ public class ValidateUserTask extends DBtask {
     }
 
     @Override
-    public String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userID) {
         LoginType user = UnmarshallHandler.unmarshall(s, LoginType.class);
         int id = ValidateUserTask.validate(user.payload.username, user.payload.pw);
         String toReturn;

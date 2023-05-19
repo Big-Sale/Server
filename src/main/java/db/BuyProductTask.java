@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 public class BuyProductTask extends DBtask {
     @Override
-    public String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userID) {
         BuyProductType productType = UnmarshallHandler.unmarshall(s, BuyProductType.class);
         Integer[] products = productType.payload;
         buyProduct(userID, products);

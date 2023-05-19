@@ -4,14 +4,13 @@ import beans.OrderRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class DenyOrderTask extends DBtask {
 
      @Override
-     public String doExecute(String s, int userID) {
+     protected String doExecute(String s, int userID) {
           ObjectMapper objectMapper = new ObjectMapper();
           try {
                OrderRequest order = objectMapper.readValue(s, OrderRequest.class);

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class FindSellerTask extends DBtask {
     @Override
-    public String doExecute(String s, int userID)  {
+    protected String doExecute(String s, int userID)  {
         return findSeller(Integer.parseInt(s));
 
     }

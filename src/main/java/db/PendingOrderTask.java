@@ -14,7 +14,7 @@ import java.util.LinkedList;
 
 public class PendingOrderTask extends DBtask {
     @Override
-    public String doExecute(String s, int userID)  {
+    protected String doExecute(String s, int userID)  {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonReturn = null;
         try {

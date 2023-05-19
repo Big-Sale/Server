@@ -11,7 +11,7 @@ import java.sql.SQLException;
 public class AcceptOrderTask extends DBtask {
 
      @Override
-     public String doExecute(String s, int userID) {
+     protected String doExecute(String s, int userID) {
           ObjectMapper objectMapper = new ObjectMapper();
           try {
                //AcceptOrderRequest order = UnmarshallHandler.unmarshall(s, AcceptOrderRequest.class);

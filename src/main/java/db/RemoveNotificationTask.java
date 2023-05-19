@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class RemoveNotificationTask extends DBtask {
     @Override
-    public String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userID) {
         removeNotification(userID, Integer.parseInt(s));
         return null;
     }
