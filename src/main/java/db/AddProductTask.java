@@ -44,13 +44,13 @@ public class AddProductTask extends DBtask {
 
     /**
      * @param s json object
-     * @param userID
+     * @param userId
      * @return product object as json string
      */
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
         ProductType product = UnmarshallHandler.unmarshall(s, ProductType.class);
-        product.payload.seller = userID;
+        product.payload.seller = userId;
         product.payload.status = "available";
         product.payload.productId = addProduct(product.payload);
 

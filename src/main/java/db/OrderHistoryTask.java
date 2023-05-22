@@ -12,7 +12,7 @@ import java.util.LinkedList;
 
 public class OrderHistoryTask extends DBtask {
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
         OrderHistoryRequestType ohrt = UnmarshallHandler.unmarshall(s, OrderHistoryRequestType.class);
         LinkedList<OrderHistoryProduct> list = fetchOrderHistory(ohrt);
         OrderHistoryType oht = new OrderHistoryType();

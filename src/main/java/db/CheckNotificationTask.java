@@ -13,19 +13,21 @@ import java.util.LinkedList;
 
 public class CheckNotificationTask extends DBtask {
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
         Product product = UnmarshallHandler.unmarshall(s, Product.class);
-        LinkedList<Integer> userIDs = getSubscUserIDs(product);
-        addNotifications(product, userIDs);
+        LinkedList<Integer> userIds = getSubscribeUserIds(product);
+        if (userIds != null) {
+            addNotifications(product, userIds);
+        }
         try {
-            return new ObjectMapper().writeValueAsString(userIDs);
+            return new ObjectMapper().writeValueAsString(userIds);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private LinkedList<Integer> getSubscUserIDs(Product product) {
-        LinkedList<Integer> userIDs = new LinkedList<>();
+    private LinkedList<Integer> getSubscribeUserIds(Product product) {
+        LinkedList<Integer> userIds = new LinkedList<>();
         try (Connection conn = DataBaseConnection.getDatabaseConnection()) {
             String query = "select userid from subscriptions where productname = ?;";
             PreparedStatement stm = conn.prepareStatement(query);
@@ -33,22 +35,22 @@ public class CheckNotificationTask extends DBtask {
             ResultSet rs = stm.executeQuery();
             while (rs.next()) {
                 int id = rs.getInt(1);
-                userIDs.add(id);
+                userIds.add(id);
             }
             rs.close();
             stm.close();
-            return userIDs;
+            return userIds;
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
         return null;
     }
 
-    private void addNotifications(Product product, LinkedList<Integer> userIDs) {
+    private void addNotifications(Product product, LinkedList<Integer> userIds) {
         String q = "call add_notification(?, ?);";
         try(Connection conn = DataBaseConnection.getDatabaseConnection()) {
             PreparedStatement st = conn.prepareStatement(q);
-            st.setArray(1, conn.createArrayOf("integer", userIDs.toArray()));
+            st.setArray(1, conn.createArrayOf("integer", userIds.toArray()));
             st.setInt(2, product.productId);
             st.execute();
             st.close();

@@ -11,14 +11,14 @@ import java.sql.SQLException;
 public class AcceptOrderTask extends DBtask {
 
      @Override
-     protected String doExecute(String s, int userID) {
+     protected String doExecute(String s, int userId) {
           ObjectMapper objectMapper = new ObjectMapper();
           try {
                //AcceptOrderRequest order = UnmarshallHandler.unmarshall(s, AcceptOrderRequest.class);
                OrderRequest order = objectMapper.readValue(s, OrderRequest.class);
-               int productID = order.payload.productId;
-               int buyerID = order.payload.buyer;
-               acceptOrder(productID, buyerID);
+               int productId = order.payload.productId;
+               int buyerId = order.payload.buyer;
+               acceptOrder(productId, buyerId);
                return new ObjectMapper().writeValueAsString(order);
           } catch (Exception e) {
                e.printStackTrace();
@@ -26,11 +26,11 @@ public class AcceptOrderTask extends DBtask {
           return null;
      }
 
-     private void acceptOrder(int productID, int userID) {
+     private void acceptOrder(int productId, int userId) {
           try (Connection connection = DataBaseConnection.getDatabaseConnection();
                PreparedStatement stm = connection.prepareStatement("CALL accept_pending_order(?, ?, ?)")) {
-               stm.setInt(1, userID);
-               stm.setInt(2, productID);
+               stm.setInt(1, userId);
+               stm.setInt(2, productId);
                stm.setDate(3, new Date(System.currentTimeMillis()));
                stm.executeUpdate();
           } catch (SQLException e){

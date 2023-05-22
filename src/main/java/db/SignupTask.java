@@ -46,10 +46,9 @@ public class SignupTask extends DBtask {
     }
 
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
         SignupType type = UnmarshallHandler.unmarshall(s, SignupType.class);
         SignupUser user = type.payload;
-        String success;
         int id = signup(user);
         return String.valueOf(id);
     }

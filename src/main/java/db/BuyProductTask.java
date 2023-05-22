@@ -12,10 +12,10 @@ import java.sql.SQLException;
 
 public class BuyProductTask extends DBtask {
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
         BuyProductType productType = UnmarshallHandler.unmarshall(s, BuyProductType.class);
         Integer[] products = productType.payload;
-        buyProduct(userID, products);
+        buyProduct(userId, products);
 
         try {
             return new ObjectMapper().writeValueAsString(products);
@@ -25,11 +25,11 @@ public class BuyProductTask extends DBtask {
         return null;
     }
 
-    private void buyProduct(int userID, Integer[] products) {
+    private void buyProduct(int userId, Integer[] products) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = con.prepareStatement("CALL insert_into_pending_orders(?, ?)")) {
             Array productArray = con.createArrayOf("integer", products);
-            stm.setInt(1, userID);
+            stm.setInt(1, userId);
             stm.setArray(2, productArray);
             stm.execute();
         } catch (SQLException e) {

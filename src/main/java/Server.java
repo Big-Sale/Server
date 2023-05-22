@@ -179,8 +179,12 @@ public class Server extends WebSocketServer {
 
     private void login(String s, WebSocket webSocket) { //TODO kanske inte ska vara task kolla över hur man kan göra med ID
         LoginTask lt = new LoginTask();
-        String toReturn = lt.execute(s, OnlineUsers.get(webSocket));
-        webSocket.send(toReturn);
+        String toReturn = lt.execute(s, -1);
+        int id = Integer.parseInt(toReturn);
+        if (id != -1) {
+            OnlineUsers.put(id, webSocket);
+        }
+        webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
     }
 
     private void signup(String s, WebSocket webSocket) {

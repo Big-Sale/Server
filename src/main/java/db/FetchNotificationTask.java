@@ -16,9 +16,9 @@ import java.util.LinkedList;
  */
 public class FetchNotificationTask extends DBtask {
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
 
-        LinkedList<Product> list = fetchNotifications(userID);
+        LinkedList<Product> list = fetchNotifications(userId);
         ReturnProductType returnProductType = new ReturnProductType();
         returnProductType.type = "notifications";
         returnProductType.payload = list.toArray(new Product[0]);
@@ -30,13 +30,13 @@ public class FetchNotificationTask extends DBtask {
         }
     }
 
-    private LinkedList<Product> fetchNotifications(int userID) {
+    private LinkedList<Product> fetchNotifications(int userId) {
         LinkedList<Product> list = new LinkedList<>();
         try {
             Connection connection = db.DataBaseConnection.getDatabaseConnection();
             String query = "select * from get_notifications(?);";
             PreparedStatement stm = connection.prepareStatement(query);
-            stm.setInt(1, userID);
+            stm.setInt(1, userId);
             ResultSet rs = stm.executeQuery();
             while (rs.next()) {
                 Product product = new Product();

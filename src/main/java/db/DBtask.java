@@ -4,12 +4,12 @@ import logger.Logger;
 
 public abstract class DBtask {
 
-    public String execute(String payload, int userID) {
-        Logger.dbLog(payload, userID); //TODO ändra
-        return doExecute(payload, userID);
+    public String execute(String payload, int userId) {
+        Logger.dbLog(payload, userId); //TODO ändra
+        return doExecute(payload, userId);
 
     }
 
-    protected abstract String doExecute(String s, int userID);
+    protected abstract String doExecute(String s, int userId);
 
 }

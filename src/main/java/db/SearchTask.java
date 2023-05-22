@@ -17,7 +17,7 @@ public class SearchTask extends DBtask {
 
 
     @Override
-    protected String doExecute(String s, int userID) {
+    protected String doExecute(String s, int userId) {
         SearchType searchType = UnmarshallHandler.unmarshall(s, SearchType.class);
         SearchRequest buyProductRequest = new SearchRequest();
         buyProductRequest.type = "search";
