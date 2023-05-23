@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class FindSellerTask extends DBtask {
+
     @Override
     protected String doExecute(String s, int userId)  {
         return findSeller(Integer.parseInt(s));
@@ -27,8 +28,6 @@ public class FindSellerTask extends DBtask {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return String.valueOf(seller);
     }
-
 }

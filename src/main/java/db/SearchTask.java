@@ -15,7 +15,6 @@ import java.util.List;
 
 public class SearchTask extends DBtask {
 
-
     @Override
     protected String doExecute(String s, int userId) {
         SearchType searchType = UnmarshallHandler.unmarshall(s, SearchType.class);
@@ -61,7 +60,6 @@ public class SearchTask extends DBtask {
         }
     }
 
-
     public static Product[] getRandomProducts() {
         Connection con = DataBaseConnection.getDatabaseConnection();
         String query = "select * from products where status = 'available' order by random() limit 100;";
@@ -91,7 +89,6 @@ public class SearchTask extends DBtask {
         }
         return products.toArray(new Product[0]);
     }
-
 
     private String addCondition(String query, String condition) {
         query += " and conditions = '" + condition + "'";

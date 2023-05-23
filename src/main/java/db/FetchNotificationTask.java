@@ -14,6 +14,7 @@ import java.util.LinkedList;
 /**
  * task for notifying subscriber
  */
+
 public class FetchNotificationTask extends DBtask {
     @Override
     protected String doExecute(String s, int userId) {

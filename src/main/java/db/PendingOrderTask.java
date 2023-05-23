@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class PendingOrderTask extends DBtask {
+
     @Override
     protected String doExecute(String s, int userId)  {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -23,7 +24,6 @@ public class PendingOrderTask extends DBtask {
             throw new RuntimeException(e);
         }
         return jsonReturn;
-
     }
 
     private String findSeller(int productId) {
@@ -41,9 +41,9 @@ public class PendingOrderTask extends DBtask {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return String.valueOf(seller);
     }
+
     public PendingOrderType sellerPendingOrders(int userId) {
         LinkedList<PendingOrder> pendingOrders = new LinkedList<>();
         try (Connection con = DataBaseConnection.getDatabaseConnection();
@@ -73,5 +73,4 @@ public class PendingOrderTask extends DBtask {
         pot.payload = pendingOrders.toArray(new PendingOrder[0]);
         return pot;
     }
-
 }

@@ -29,10 +29,8 @@ public class OrderHistoryTask extends DBtask {
         LinkedList<OrderHistoryProduct> list = new LinkedList<>();
         try (Connection connection = db.DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = connection.prepareStatement("SELECT * FROM get_order_history(?, ?)")) {
-
             stm.setInt(1, ohrt.payload.userId);
             stm.setDate(2, Date.valueOf(ohrt.payload.date));
-
             try (ResultSet rs = stm.executeQuery()) {
                 while (rs.next()) {
                     OrderHistoryProduct ohp = new OrderHistoryProduct();
@@ -48,12 +46,9 @@ public class OrderHistoryTask extends DBtask {
                     list.add(ohp);
                 }
             }
-
             return list;
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
     }
 }

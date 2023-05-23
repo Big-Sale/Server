@@ -4,9 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class DataBaseConnection {
+
     public final static String pw = "zhupgiu8";
-
-
 
     public static Connection getDatabaseConnection() {
         String url = "jdbc:postgresql://pgserver.mau.se:5432/ak0856";

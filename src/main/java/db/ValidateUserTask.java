@@ -2,10 +2,10 @@ package db;
 
 import beans.LoginType;
 import marshall.UnmarshallHandler;
-
 import java.sql.*;
 
 public class ValidateUserTask extends DBtask {
+
     public static int validate(String username, String pw) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = con.prepareStatement("SELECT pw, userid FROM users WHERE username = ?")) {

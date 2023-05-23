@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 public class CheckNotificationTask extends DBtask {
+
     @Override
     protected String doExecute(String s, int userId) {
         Product product = UnmarshallHandler.unmarshall(s, Product.class);

@@ -13,8 +13,6 @@ import java.sql.*;
 
 public class AddProductTask extends DBtask {
 
-
-
      private int addProduct(Product product) {
           Connection connection = DataBaseConnection.getDatabaseConnection();
           String query = "select insert_product(?, ?, ?, ?, ?, ?, ?, ?)";

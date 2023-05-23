@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class BuyProductTask extends DBtask {
+
     @Override
     protected String doExecute(String s, int userId) {
         BuyProductType productType = UnmarshallHandler.unmarshall(s, BuyProductType.class);

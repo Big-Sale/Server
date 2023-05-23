@@ -11,9 +11,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
-import java.sql.SQLOutput;
 import java.util.LinkedList;
-
 
 public class Server extends WebSocketServer {
     PendingOrderTask pendingOrderTask = new PendingOrderTask();
@@ -71,62 +69,44 @@ public class Server extends WebSocketServer {
             case "pendingOrderRequest" -> getPendingOrdersPerUser(json, webSocket);
             default -> throw new IllegalStateException("Unexpected value: " + type);
         }
-
     }
 
-    private void denyOrder(String json, WebSocket webSocket) {
-        int id = OnlineUsers.get((webSocket));
-        DenyOrderTask denyOrderTask = new DenyOrderTask();
-        denyOrderTask.execute(json, id);
-    }
-
-    private void acceptOrder(String json, WebSocket webSocket) {
-        int id = OnlineUsers.get(webSocket);
-        AcceptOrderTask acceptOrderTask = new AcceptOrderTask();
-        acceptOrderTask.execute(json, id);
-    }
-
-    private void notificationCheck(WebSocket webSocket) {
-
-    }
-
-    private void subscribe(String payload, WebSocket webSocket) {
-        int userId = OnlineUsers.get(webSocket);
-        SubscribeTask st = new SubscribeTask();
-        st.execute(payload, userId);
-    }
-
-    private void removeNotification(String productId, WebSocket webSocket) {
-        int userId = OnlineUsers.get(webSocket);
-        RemoveNotificationTask rnt = new RemoveNotificationTask();
-        rnt.execute(productId, userId);
-    }
-
-    private void buyProduct(String json, WebSocket webSocket) {
-        BuyProductTask bph = new BuyProductTask();
-        int id = OnlineUsers.get(webSocket);
-        String jsonProducts = bph.execute(json, id);
-
-        FindSellerTask fst = new FindSellerTask();
-
-        Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
-        for (Integer i : products) {
-            int seller = Integer.parseInt(fst.execute(String.valueOf(i), id));
-            if (OnlineUsers.contains(seller)){
-                NotificationType notificationType = new NotificationType();
-                notificationType.type = "pending_order_notification";
-                try {
-                    OnlineUsers.get(seller).send(new ObjectMapper().writeValueAsString(notificationType));
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-            }
+    private void login(String s, WebSocket webSocket) {
+        LoginTask lt = new LoginTask();
+        String toReturn = lt.execute(s, -1);
+        int id = Integer.parseInt(toReturn);
+        if (id != -1) {
+            OnlineUsers.put(id, webSocket);
+            boolean notify = SubscribeTask.hasNotification(id) || SubscribeTask.hasPendingOrders(id);
+            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + ",\"notify\":" + notify + "}}");
+        } else {
+            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
         }
     }
 
-    private void addProduct(String json, WebSocket webSocket) {
+    private void signup(String s, WebSocket webSocket) {
+        SignupTask sh = new SignupTask();
+        String stringID = sh.execute(s,-1);
+        int id = Integer.parseInt(stringID);
+        if (id != -1) {
+            OnlineUsers.put(id, webSocket);
+        }
+        webSocket.send("{\"type\":\"signup\",\"payload\":{\"id\":" + id + "}}");
+    }
+
+    private void search(String s, WebSocket webSocket) {
+        webSocket.send(searchTask.execute(s, OnlineUsers.get(webSocket)));
+    }
+
+    private void notifications(WebSocket webSocket) {
+        FetchNotificationTask fnt = new FetchNotificationTask();
         int id = OnlineUsers.get(webSocket);
+        webSocket.send(fnt.execute(null, id));
+    }
+
+    private void addProduct(String json, WebSocket webSocket) {
         AddProductTask aph = new AddProductTask();
+        int id = OnlineUsers.get(webSocket);
         String jsonProduct = aph.execute(json, id);
         checkNotifications(jsonProduct);
     }
@@ -156,16 +136,65 @@ public class Server extends WebSocketServer {
         }
     }
 
-    private void notifications(WebSocket webSocket) {
-        int id = OnlineUsers.get(webSocket);
-        FetchNotificationTask fnt = new FetchNotificationTask();
-        webSocket.send(fnt.execute(null, id));
-    }
-
     private void orderHistory(String json, WebSocket webSocket) {
         OrderHistoryTask oht = new OrderHistoryTask();
         webSocket.send(oht.execute(json, OnlineUsers.get(webSocket)));
+    }
 
+    private void buyProduct(String json, WebSocket webSocket) {
+        BuyProductTask bph = new BuyProductTask();
+        int id = OnlineUsers.get(webSocket);
+        String jsonProducts = bph.execute(json, id);
+
+        FindSellerTask fst = new FindSellerTask();
+
+        Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
+        for (Integer i : products) {
+            int seller = Integer.parseInt(fst.execute(String.valueOf(i), id));
+            if (OnlineUsers.contains(seller)){
+                NotificationType notificationType = new NotificationType();
+                notificationType.type = "pending_order_notification";
+                try {
+                    OnlineUsers.get(seller).send(new ObjectMapper().writeValueAsString(notificationType));
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void removeNotification(String productId, WebSocket webSocket) {
+        RemoveNotificationTask rnt = new RemoveNotificationTask();
+        int userId = OnlineUsers.get(webSocket);
+        rnt.execute(productId, userId);
+    }
+
+    private void subscribe(String payload, WebSocket webSocket) {
+        SubscribeTask st = new SubscribeTask();
+        int userId = OnlineUsers.get(webSocket);
+        st.execute(payload, userId);
+    }
+
+    private void notificationCheck(WebSocket webSocket) {
+
+    }
+
+    private void acceptOrder(String json, WebSocket webSocket) {
+        int id = OnlineUsers.get(webSocket);
+        AcceptOrderTask acceptOrderTask = new AcceptOrderTask();
+        acceptOrderTask.execute(json, id);
+    }
+
+    private void denyOrder(String json, WebSocket webSocket) {
+        int id = OnlineUsers.get((webSocket));
+        DenyOrderTask denyOrderTask = new DenyOrderTask();
+        denyOrderTask.execute(json, id);
+    }
+
+    private void getPendingOrdersPerUser(String json, WebSocket webSocket){
+        int id = OnlineUsers.get(webSocket);
+        String jsonReturn = pendingOrderTask.execute(json, id);
+        webSocket.send(jsonReturn);
     }
 
     @Override
@@ -173,42 +202,5 @@ public class Server extends WebSocketServer {
         Logger.errorLog(webSocket.getRemoteSocketAddress().toString(), e);
         OnlineUsers.remove(webSocket);
         webSocket.close();
-    }
-
-
-    private void login(String s, WebSocket webSocket) {
-        LoginTask lt = new LoginTask();
-        String toReturn = lt.execute(s, -1);
-        int id = Integer.parseInt(toReturn);
-        if (id != -1) {
-            OnlineUsers.put(id, webSocket);
-            System.out.println();
-            System.out.println("Has Notifications: " + SubscribeTask.hasNotification(id));
-            System.out.println("Has Pending Orders: " + SubscribeTask.hasPendingOrders(id));
-            System.out.println();
-            boolean notify = SubscribeTask.hasNotification(id) || SubscribeTask.hasPendingOrders(id);
-            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + ",\"notify\":" + notify + "}}");
-        } else {
-            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
-        }
-    }
-
-    private void signup(String s, WebSocket webSocket) {
-        SignupTask sh = new SignupTask();
-        String stringID = sh.execute(s,-1);
-        int id = Integer.parseInt(stringID);
-        if (id != -1) {
-            OnlineUsers.put(id, webSocket);
-        }
-        webSocket.send("{\"type\":\"signup\",\"payload\":{\"id\":" + id + "}}");
-    }
-
-    private void search(String s, WebSocket webSocket) {
-        webSocket.send(searchTask.execute(s, OnlineUsers.get(webSocket)));
-    }
-    private void getPendingOrdersPerUser(String json, WebSocket webSocket){
-        int id = OnlineUsers.get(webSocket);
-        String jsonReturn = pendingOrderTask.execute(json, id);
-        webSocket.send(jsonReturn);
     }
 }

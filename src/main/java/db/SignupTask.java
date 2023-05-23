@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SignupTask extends DBtask {
+
     private static boolean validateSignup(SignupUser user) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = con.prepareStatement("SELECT * FROM users WHERE username = ? OR email = ?")) {
