@@ -3,10 +3,12 @@ package db;
 import beans.SubscribeType;
 import marshall.UnmarshallHandler;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 public class SubscribeTask extends DBtask {
 
@@ -40,16 +42,23 @@ public class SubscribeTask extends DBtask {
         }
     }
 
-    public static boolean hasPending(int id) {
+    public static boolean hasPendingOrders(int id) {
+        String test = "{call check_pending_orders(?)}";
         try (Connection con = DataBaseConnection.getDatabaseConnection();
-        PreparedStatement stm = con.prepareStatement("SELECT * FROM pending_orders WHERE userid = ?")) {
+        CallableStatement stm = con.prepareCall(test)) {
             stm.setInt(1, id);
-            try (ResultSet rs = stm.executeQuery()) {
-                return rs.next();
+            try {
+                stm.registerOutParameter(1, Types.BOOLEAN);
+                stm.execute();
+                return stm.getBoolean(1);
+            } catch (SQLException e) {
+                stm.close();
+                e.printStackTrace();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        return false;
     }
 
     @Override

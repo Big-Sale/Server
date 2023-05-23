@@ -11,6 +11,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.net.InetSocketAddress;
+import java.sql.SQLOutput;
 import java.util.LinkedList;
 
 
@@ -181,7 +182,11 @@ public class Server extends WebSocketServer {
         int id = Integer.parseInt(toReturn);
         if (id != -1) {
             OnlineUsers.put(id, webSocket);
-            boolean notify = SubscribeTask.hasNotification(id) || SubscribeTask.hasPending(id);
+            System.out.println();
+            System.out.println("Has Notifications: " + SubscribeTask.hasNotification(id));
+            System.out.println("Has Pending Orders: " + SubscribeTask.hasPendingOrders(id));
+            System.out.println();
+            boolean notify = SubscribeTask.hasNotification(id) || SubscribeTask.hasPendingOrders(id);
             webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + ",\"notify\":" + notify + "}}");
         } else {
             webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
