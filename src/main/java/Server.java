@@ -159,8 +159,6 @@ public class Server extends WebSocketServer {
         int id = OnlineUsers.get(webSocket);
         FetchNotificationTask fnt = new FetchNotificationTask();
         webSocket.send(fnt.execute(null, id));
-        //TODO: Query somr retunerar alla produkter som id premunurerar på (och flytta till r'tt handler)
-        //TODO är ovanstående todo aktuell????
     }
 
     private void orderHistory(String json, WebSocket webSocket) {
@@ -177,14 +175,17 @@ public class Server extends WebSocketServer {
     }
 
 
-    private void login(String s, WebSocket webSocket) { //TODO kanske inte ska vara task kolla över hur man kan göra med ID
+    private void login(String s, WebSocket webSocket) {
         LoginTask lt = new LoginTask();
         String toReturn = lt.execute(s, -1);
         int id = Integer.parseInt(toReturn);
         if (id != -1) {
             OnlineUsers.put(id, webSocket);
+            boolean notify = SubscribeTask.hasNotification(id) || SubscribeTask.hasPending(id);
+            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + ",\"notify\":" + notify + "}}");
+        } else {
+            webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
         }
-        webSocket.send("{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}");
     }
 
     private void signup(String s, WebSocket webSocket) {
