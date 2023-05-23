@@ -1,5 +1,8 @@
 package db;
 
+import beans.SubscribeType;
+import marshall.UnmarshallHandler;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -51,7 +54,8 @@ public class SubscribeTask extends DBtask {
 
     @Override
     protected String doExecute(String s, int userID) {
-        subscribe(s, userID);
+        SubscribeType type = UnmarshallHandler.unmarshall(s, SubscribeType.class);
+        subscribe(type.payload, userID);
         return null;
     }
 

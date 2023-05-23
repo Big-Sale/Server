@@ -63,7 +63,7 @@ public class Server extends WebSocketServer {
             case "OrderHistoryRequest" -> orderHistory(json, webSocket);
             case "buyProduct" -> buyProduct(json, webSocket);
             case "removeNotification" -> removeNotification(rootNode.get("payload").asText(), webSocket);
-            case "subscribe" -> subscribe(rootNode.get("payload").asText(), webSocket);
+            case "subscribe" -> subscribe(json, webSocket);
             case "notificationCheck" -> notificationCheck(webSocket);
             case "acceptProductSale" -> acceptOrder(json, webSocket);
             case "denyProductSale" -> denyOrder(json, webSocket);
@@ -138,7 +138,7 @@ public class Server extends WebSocketServer {
         for(Integer userID : userIDs) {
             if (OnlineUsers.contains(userID)) {
                 WebSocket webSocket = OnlineUsers.get(userID);
-                if (webSocket != null && userID != product.seller) {
+                if (webSocket != null /* && userID != product.seller */) {
                     ObjectMapper objectMapper = new ObjectMapper();
                     NotificationType notificationType = new NotificationType();
                     notificationType.type = "subscribed_product";
