@@ -10,7 +10,9 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 
 public class Server extends WebSocketServer {
@@ -59,11 +61,10 @@ public class Server extends WebSocketServer {
             case "search" -> search(json, webSocket);
             case "notifications" -> notifications(webSocket);
             case "addProduct" -> addProduct(json, webSocket);
-            case "OrderHistoryRequest" -> orderHistory(json, webSocket);
+            case "orderHistoryRequest" -> orderHistory(json, webSocket);
             case "buyProduct" -> buyProduct(json, webSocket);
             case "removeNotification" -> removeNotification(rootNode.get("payload").asText(), webSocket);
             case "subscribe" -> subscribe(json, webSocket);
-            case "notificationCheck" -> notificationCheck(webSocket);
             case "acceptProductSale" -> acceptOrder(json, webSocket);
             case "denyProductSale" -> denyOrder(json, webSocket);
             case "pendingOrderRequest" -> getPendingOrdersPerUser(json, webSocket);
@@ -175,10 +176,6 @@ public class Server extends WebSocketServer {
         SubscribeTask st = new SubscribeTask();
         int userId = OnlineUsers.get(webSocket);
         st.execute(payload, userId);
-    }
-
-    private void notificationCheck(WebSocket webSocket) {
-
     }
 
     private void acceptOrder(String json, WebSocket webSocket) {
