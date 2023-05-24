@@ -119,7 +119,7 @@ public class Server extends WebSocketServer {
         for(Integer userID : userIDs) {
             if (OnlineUsers.contains(userID)) {
                 WebSocket webSocket = OnlineUsers.get(userID);
-                if (webSocket != null /* && userID != product.seller */) {
+                if (webSocket != null && userID != product.seller) {
                     ObjectMapper objectMapper = new ObjectMapper();
                     NotificationType notificationType = new NotificationType();
                     notificationType.type = "subscribed_product";
@@ -150,12 +150,14 @@ public class Server extends WebSocketServer {
 
         Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
         for (Integer i : products) {
-            int seller = Integer.parseInt(fst.execute(String.valueOf(i), id));
-            if (OnlineUsers.contains(seller)){
-                NotificationType notificationType = new NotificationType();
+            String pendingOrder = fst.execute(String.valueOf(i), id);
+            PendingOrder p = UnmarshallHandler.unmarshall(pendingOrder, PendingOrder.class);
+            if (OnlineUsers.contains(p.product.seller)){
+                PendingOrderNotify notificationType = new PendingOrderNotify();
                 notificationType.type = "pending_order_notification";
+                notificationType.payload = p;
                 try {
-                    OnlineUsers.get(seller).send(new ObjectMapper().writeValueAsString(notificationType));
+                    OnlineUsers.get(p.product.seller).send(new ObjectMapper().writeValueAsString(notificationType));
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
