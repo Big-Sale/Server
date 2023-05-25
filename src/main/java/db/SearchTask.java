@@ -90,15 +90,10 @@ public class SearchTask extends DBtask {
         return products.toArray(new Product[0]);
     }
 
-    private String addCondition(String query, String condition) {
-        query += " and conditions = '" + condition + "'";
-        return query;
-    }
-
     private class SearchBuilder {
-        private Connection connection;
-        private List<Object> parameters = new ArrayList<>();
-        private StringBuilder query = new StringBuilder();
+        private final Connection connection;
+        private final List<Object> parameters = new ArrayList<>();
+        private final StringBuilder query = new StringBuilder();
 
         public SearchBuilder(Connection connection) {
             this.connection = connection;

@@ -1,4 +1,4 @@
-package OnlineUsers;
+package onlineusers;
 
 import org.java_websocket.WebSocket;
 

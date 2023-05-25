@@ -11,25 +11,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 public class SubscribeTask extends DBtask {
-
-    //TODO behöver vi dessa?
-    public static void alert(String productName) {
-        Connection connection = DataBaseConnection.getDatabaseConnection();
-        String query = "select userid from subscription where productname = ?";
-        try {
-            PreparedStatement pstmt = connection.prepareStatement(query);
-            pstmt.setString(1, productName);
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                int userId = rs.getInt("userid");
-            }
-            pstmt.close();
-            connection.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static boolean hasNotification(int id) {
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement pstmt = con.prepareStatement("SELECT * FROM notifications WHERE userid = ?")) {
@@ -45,7 +26,7 @@ public class SubscribeTask extends DBtask {
     public static boolean hasPendingOrders(int id) {
         String test = "{call check_pending_orders(?)}";
         try (Connection con = DataBaseConnection.getDatabaseConnection();
-        CallableStatement stm = con.prepareCall(test)) {
+             CallableStatement stm = con.prepareCall(test)) {
             stm.setInt(1, id);
             try {
                 stm.registerOutParameter(1, Types.BOOLEAN);

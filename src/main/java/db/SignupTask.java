@@ -4,7 +4,9 @@ import beans.SignupType;
 import beans.SignupUser;
 
 import java.sql.*;
+
 import marshall.UnmarshallHandler;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;

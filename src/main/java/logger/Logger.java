@@ -10,44 +10,44 @@ public class Logger {
     public static void dbLog(String payload, int userID) {
         String payloadBlock = block(payload);
         System.out.println(
-        block(now()) +
-        block("ACTION") +
-        block("FROM") +
-        block(String.valueOf(userID)) +
-        block("PAYLOAD: " + payloadBlock));
+                block(now()) +
+                        block("ACTION") +
+                        block("FROM") +
+                        block(String.valueOf(userID)) +
+                        block("PAYLOAD: " + payloadBlock));
     }
 
     public static void messageLog(String remoteAddress) {
         System.out.println(
-        block(now()) +
-        block("REQUEST") +
-        block("FROM") +
-        block(remoteAddress));
+                block(now()) +
+                        block("REQUEST") +
+                        block("FROM") +
+                        block(remoteAddress));
     }
 
     public static void connectLog(String remoteAddress) {
         System.out.println(
-        block(now()) +
-        block("CONNECTION") +
-        block("OPENED") +
-        block("FROM") +
-        block(remoteAddress));
+                block(now()) +
+                        block("CONNECTION") +
+                        block("OPENED") +
+                        block("FROM") +
+                        block(remoteAddress));
     }
 
     public static void disconnectLog(String remoteAddress) {
         System.out.println(
-        block(now()) +
-        block("CONNECTION") +
-        block("CLOSED") +
-        block("FROM") +
-        block(remoteAddress));
+                block(now()) +
+                        block("CONNECTION") +
+                        block("CLOSED") +
+                        block("FROM") +
+                        block(remoteAddress));
     }
 
     public static void errorLog(String remoteAddress, Exception e) {
         System.err.println(
-        block("ERROR") +
-        block("FROM") +
-        block(remoteAddress));
+                block("ERROR") +
+                        block("FROM") +
+                        block(remoteAddress));
         e.printStackTrace();
     }
 

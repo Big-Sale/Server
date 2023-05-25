@@ -13,9 +13,8 @@ import java.sql.SQLException;
 public class FindSellerTask extends DBtask {
 
     @Override
-    protected String doExecute(String s, int userId)  {
+    protected String doExecute(String s, int userId) {
         return findSeller(Integer.parseInt(s), userId);
-
     }
 
     private String findSeller(int productId, int userId) {
@@ -26,7 +25,7 @@ public class FindSellerTask extends DBtask {
             String query = "SELECT * FROM get_product_with_buyer_username(?, ?)";
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             preparedStatement.setInt(1, productId);
-            preparedStatement.setInt(2,userId);
+            preparedStatement.setInt(2, userId);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
                 p.buyer = rs.getString("buyer_username");

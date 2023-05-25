@@ -18,12 +18,10 @@ import java.util.LinkedList;
 public class FetchNotificationTask extends DBtask {
     @Override
     protected String doExecute(String s, int userId) {
-
         LinkedList<Product> list = fetchNotifications(userId);
         ReturnProductType returnProductType = new ReturnProductType();
         returnProductType.type = "notifications";
         returnProductType.payload = list.toArray(new Product[0]);
-
         try {
             return new ObjectMapper().writeValueAsString(returnProductType);
         } catch (JsonProcessingException e) {

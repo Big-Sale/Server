@@ -2,6 +2,7 @@ package db;
 
 import beans.LoginType;
 import marshall.UnmarshallHandler;
+
 import java.sql.*;
 
 public class ValidateUserTask extends DBtask {
@@ -29,12 +30,11 @@ public class ValidateUserTask extends DBtask {
         LoginType user = UnmarshallHandler.unmarshall(s, LoginType.class);
         int id = ValidateUserTask.validate(user.payload.username, user.payload.pw);
         String toReturn;
-        if (id != -1) {
-
+        if (id != -1)
             toReturn = "{\"type\":\"login\",\"payload\":{\"id\":" + id + "}}";
-        } else {
+        else
             toReturn = "{\"type\":\"login\",\"payload\":{\"id\":-1}}";
-        }
+
         return toReturn;
     }
 }

@@ -1,4 +1,4 @@
-import OnlineUsers.OnlineUsers;
+import onlineusers.OnlineUsers;
 import beans.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,8 +14,6 @@ import java.net.InetSocketAddress;
 import java.util.LinkedList;
 
 public class Server extends WebSocketServer {
-    PendingOrderTask pendingOrderTask = new PendingOrderTask();
-    SearchTask searchTask = new SearchTask();
 
     public Server() {
         super(new InetSocketAddress(8080));
@@ -46,7 +44,7 @@ public class Server extends WebSocketServer {
     public void onMessage(WebSocket webSocket, String json) {
         Logger.messageLog(webSocket.getRemoteSocketAddress().toString());
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode rootNode = null;
+        JsonNode rootNode;
         try {
             rootNode = objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
@@ -85,7 +83,7 @@ public class Server extends WebSocketServer {
 
     private void signup(String s, WebSocket webSocket) {
         SignupTask sh = new SignupTask();
-        String stringID = sh.execute(s,-1);
+        String stringID = sh.execute(s, -1);
         int id = Integer.parseInt(stringID);
         if (id != -1) {
             OnlineUsers.put(id, webSocket);
@@ -94,6 +92,7 @@ public class Server extends WebSocketServer {
     }
 
     private void search(String s, WebSocket webSocket) {
+        SearchTask searchTask = new SearchTask();
         webSocket.send(searchTask.execute(s, OnlineUsers.get(webSocket)));
     }
 
@@ -115,7 +114,7 @@ public class Server extends WebSocketServer {
         String jsonList = cnt.execute(jsonProduct, -1);
         LinkedList<Integer> userIDs = UnmarshallHandler.unmarshall(jsonList, LinkedList.class);
         Product product = UnmarshallHandler.unmarshall(jsonProduct, Product.class);
-        for(Integer userID : userIDs) {
+        for (Integer userID : userIDs) {
             if (OnlineUsers.contains(userID)) {
                 WebSocket webSocket = OnlineUsers.get(userID);
                 if (webSocket != null && userID != product.seller) {
@@ -144,14 +143,12 @@ public class Server extends WebSocketServer {
         BuyProductTask bph = new BuyProductTask();
         int id = OnlineUsers.get(webSocket);
         String jsonProducts = bph.execute(json, id);
-
         FindSellerTask fst = new FindSellerTask();
-
         Integer[] products = UnmarshallHandler.unmarshall(jsonProducts, Integer[].class);
         for (Integer i : products) {
             String pendingOrder = fst.execute(String.valueOf(i), id);
             PendingOrder p = UnmarshallHandler.unmarshall(pendingOrder, PendingOrder.class);
-            if (OnlineUsers.contains(p.product.seller)){
+            if (OnlineUsers.contains(p.product.seller)) {
                 PendingOrderNotify notificationType = new PendingOrderNotify();
                 notificationType.type = "pending_order_notification";
                 notificationType.payload = p;
@@ -188,8 +185,9 @@ public class Server extends WebSocketServer {
         denyOrderTask.execute(json, id);
     }
 
-    private void getPendingOrdersPerUser(String json, WebSocket webSocket){
+    private void getPendingOrdersPerUser(String json, WebSocket webSocket) {
         int id = OnlineUsers.get(webSocket);
+        PendingOrderTask pendingOrderTask = new PendingOrderTask();
         String jsonReturn = pendingOrderTask.execute(json, id);
         webSocket.send(jsonReturn);
     }

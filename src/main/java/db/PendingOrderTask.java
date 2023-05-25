@@ -15,9 +15,9 @@ import java.util.LinkedList;
 public class PendingOrderTask extends DBtask {
 
     @Override
-    protected String doExecute(String s, int userId)  {
+    protected String doExecute(String s, int userId) {
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonReturn = null;
+        String jsonReturn;
         try {
             jsonReturn = objectMapper.writeValueAsString(sellerPendingOrders(userId));
         } catch (JsonProcessingException e) {
@@ -26,31 +26,13 @@ public class PendingOrderTask extends DBtask {
         return jsonReturn;
     }
 
-    private String findSeller(int productId) {
-        int seller = -1;
-        try (Connection connection = DataBaseConnection.getDatabaseConnection()) {
-            String query = "SELECT seller FROM products WHERE productid = ?";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, productId);
-            ResultSet rs = preparedStatement.executeQuery();
-            if (rs.next()) {
-                seller = rs.getInt("seller");
-            }
-            rs.close();
-            preparedStatement.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return String.valueOf(seller);
-    }
-
     public PendingOrderType sellerPendingOrders(int userId) {
         LinkedList<PendingOrder> pendingOrders = new LinkedList<>();
         try (Connection con = DataBaseConnection.getDatabaseConnection();
              PreparedStatement stm = con.prepareStatement("SELECT * FROM pending_order_list(?)")) {
             stm.setInt(1, userId);
             ResultSet rs = stm.executeQuery();
-            while (rs.next()){
+            while (rs.next()) {
                 PendingOrder pendingOrder = new PendingOrder();
                 pendingOrder.product = new Product();
                 pendingOrder.buyerId = rs.getInt(1);

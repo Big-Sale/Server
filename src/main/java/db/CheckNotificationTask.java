@@ -49,7 +49,7 @@ public class CheckNotificationTask extends DBtask {
 
     private void addNotifications(Product product, LinkedList<Integer> userIds) {
         String q = "call add_notification(?, ?);";
-        try(Connection conn = DataBaseConnection.getDatabaseConnection()) {
+        try (Connection conn = DataBaseConnection.getDatabaseConnection()) {
             PreparedStatement st = conn.prepareStatement(q);
             st.setArray(1, conn.createArrayOf("integer", userIds.toArray()));
             st.setInt(2, product.productId);

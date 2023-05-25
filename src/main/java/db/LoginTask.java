@@ -11,5 +11,4 @@ public class LoginTask extends DBtask {
         int id = ValidateUserTask.validate(user.payload.username, user.payload.pw);
         return String.valueOf(id);
     }
-
 }
